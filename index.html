@@ -371,7 +371,8 @@
     }
 
     try {
-      const res = await fetch(REMOTE_DATA_URL, { cache: "no-store" });
+      const remoteUrl = `${REMOTE_DATA_URL}${REMOTE_DATA_URL.includes("?") ? "&" : "?"}ts=${Date.now()}`;
+      const res = await fetch(remoteUrl, { cache: "no-store" });
       if (!res.ok) return false;
 
       const remoteData = await res.json();
@@ -1180,6 +1181,22 @@
     });
   }
 
+  let remoteSyncInFlight = false;
+  async function syncFromRepoIfNewer(notify = false) {
+    if (remoteSyncInFlight) return;
+    remoteSyncInFlight = true;
+    try {
+      const changed = await seedDataFromRepoIfNeeded();
+      if (!changed) return;
+      DATA = loadData();
+      lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
+      await render();
+      if (notify) showToast("Nieuwe content geladen.");
+    } finally {
+      remoteSyncInFlight = false;
+    }
+  }
+
   // Fallback voor kiosk-situaties waarin storage/broadcast events niet altijd doorkomen.
   setInterval(() => {
     const snap = localStorage.getItem(STORAGE_KEY) || "";
@@ -1188,6 +1205,14 @@
       render();
     }
   }, 2000);
+
+  setInterval(() => {
+    syncFromRepoIfNewer(false);
+  }, 20000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) syncFromRepoIfNewer(false);
+  });
 
   // Mobile sidebar controls
   function openSidebarMobile() {
