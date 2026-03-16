@@ -3,6 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (() => {
+      const ADMIN_AUTH_KEY = "kb_admin_auth_v1";
+      const ADMIN_AUTH_VALUE = "verified";
+      const next = encodeURIComponent("admin.html");
+      try {
+        if (sessionStorage.getItem(ADMIN_AUTH_KEY) !== ADMIN_AUTH_VALUE) {
+          window.location.replace(`./admin-login.html?next=${next}`);
+        }
+      } catch {
+        window.location.replace(`./admin-login.html?next=${next}`);
+      }
+    })();
+  </script>
   <title>Admin - Kennisbank</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -86,6 +100,10 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2">
+          <button id="logoutAdmin" type="button"
+            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60">
+            Uitloggen
+          </button>
           <a href="./index.html" target="_blank"
              class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60">
             Open het portaal &rarr;
@@ -575,6 +593,7 @@
   // Storage / Live update
   // =====================================================
   const STORAGE_KEY = "kb_data_v1";
+  const ADMIN_AUTH_KEY = "kb_admin_auth_v1";
   const ISSUE_FEEDBACK_KEY = "kb_issue_feedback_v1";
   const ISSUE_REASON_LABELS = {
     unclear: "Antwoorden zijn onduidelijk",
@@ -644,6 +663,7 @@
   const treeEl = document.getElementById("tree");
   const treeSearch = document.getElementById("treeSearch");
   const statusEl = document.getElementById("status");
+  const logoutAdminBtn = document.getElementById("logoutAdmin");
   const addCategoryBtn = document.getElementById("addCategory");
   const addTopicBtn = document.getElementById("addTopic");
   const editorEmpty = document.getElementById("editorEmpty");
@@ -1681,6 +1701,13 @@
   // =====================================================
   tabContentBtn.addEventListener("click", () => setAdminTab("content"));
   tabFeedbackBtn.addEventListener("click", () => setAdminTab("feedback"));
+
+  if (logoutAdminBtn) {
+    logoutAdminBtn.addEventListener("click", () => {
+      sessionStorage.removeItem(ADMIN_AUTH_KEY);
+      window.location.replace("./admin-login.html");
+    });
+  }
   refreshFeedbackBtn.addEventListener("click", () => {
     renderFeedbackPanel();
     showToast("Feedbackoverzicht vernieuwd.");
