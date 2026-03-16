@@ -354,14 +354,32 @@
     return !!(data && typeof data === "object" && Array.isArray(data.categories));
   }
 
-  async function seedDataFromRepoIfNeeded() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (hasCategories(parsed)) return false;
-      } catch {}
+  function toEpochMs(value) {
+    const ms = Date.parse(value || "");
+    return Number.isFinite(ms) ? ms : null;
+  }
+
+  function shouldUseRemoteData(localData, remoteData) {
+    if (!hasCategories(localData)) return true;
+
+    const localUpdatedAtMs = toEpochMs(localData?.meta?.updatedAt);
+    const remoteUpdatedAtMs = toEpochMs(remoteData?.meta?.updatedAt);
+
+    if (remoteUpdatedAtMs !== null && (localUpdatedAtMs === null || remoteUpdatedAtMs > localUpdatedAtMs)) {
+      return true;
     }
+
+    if (remoteUpdatedAtMs !== null && localUpdatedAtMs !== null && remoteUpdatedAtMs === localUpdatedAtMs) {
+      const localSnapshot = JSON.stringify(localData.categories || []);
+      const remoteSnapshot = JSON.stringify(remoteData.categories || []);
+      return localSnapshot !== remoteSnapshot;
+    }
+
+    return false;
+  }
+
+  async function syncDataFromRepoIfNeeded() {
+    const localData = loadData();
 
     try {
       const remoteUrl = `${REMOTE_DATA_URL}${REMOTE_DATA_URL.includes("?") ? "&" : "?"}ts=${Date.now()}`;
@@ -372,7 +390,10 @@
       if (!isValidDataShape(remoteData) || !hasCategories(remoteData)) return false;
 
       remoteData.meta = remoteData.meta || {};
+      if (!shouldUseRemoteData(localData, remoteData)) return false;
+
       localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+      if (bc) bc.postMessage({ type: "updated", at: remoteData.meta.updatedAt || null });
       return true;
     } catch {
       return false;
@@ -1204,7 +1225,7 @@
   // Init
   async function initApp() {
     if (!location.hash) location.hash = "#/";
-    await seedDataFromRepoIfNeeded();
+    await syncDataFromRepoIfNeeded();
     DATA = loadData();
     lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
     await render();
