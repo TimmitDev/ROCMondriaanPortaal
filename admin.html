@@ -1,0 +1,2011 @@
+﻿<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Kennisbank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Manrope", "ui-sans-serif", "sans-serif"],
+            display: ["Sora", "ui-sans-serif", "sans-serif"]
+          },
+          colors: {
+            brand: {
+              50: "#fff3f2",
+              100: "#ffe2df",
+              200: "#ffc9c3",
+              300: "#ffa49a",
+              400: "#ff6f62",
+              500: "#f3483a",
+              600: "#dd3023",
+              700: "#b9241b",
+              800: "#991f19",
+              900: "#7f201b"
+            }
+          },
+          boxShadow: {
+            soft: "0 20px 45px -25px rgba(15, 23, 42, 0.35)"
+          },
+          keyframes: {
+            rise: {
+              "0%": { opacity: "0", transform: "translateY(10px)" },
+              "100%": { opacity: "1", transform: "translateY(0)" }
+            }
+          },
+          animation: {
+            rise: "rise .35s ease-out both"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: "Manrope", ui-sans-serif, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #fee2e2 0%, rgba(254, 226, 226, 0) 45%),
+                  radial-gradient(circle at 85% 15%, #dbeafe 0%, rgba(219, 234, 254, 0) 45%),
+                  linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    h1, h2, h3, .admin-display { font-family: "Sora", ui-sans-serif, sans-serif; }
+    #tree > * { animation: rise .3s ease-out both; }
+    #libraryList > * { animation: rise .3s ease-out both; }
+    button, a, input, select, textarea {
+      transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #fecaca;
+      outline-offset: 1px;
+      border-color: #f87171;
+    }
+    [data-topic-item] button:hover { transform: translateX(2px); }
+    [data-cat-item], [data-sub-item] { box-shadow: 0 10px 25px -22px rgba(15, 23, 42, 0.45); }
+  </style>
+</head>
+
+<body class="text-slate-900 antialiased">
+  <div class="min-h-screen flex flex-col">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-slate-200/70">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+          <img src="/ROCM.jpeg" alt="Logo" class="h-full w-full object-cover">
+        </div>
+        <div class="min-w-0">
+          <div class="admin-display font-semibold text-slate-900 leading-tight">ROC Mondriaan - Admin Panel</div>
+          <div id="status" class="text-xs text-slate-500 truncate">Niet opgeslagen</div>
+        </div>
+
+        <div class="ml-auto flex items-center gap-2">
+          <a href="./index.html" target="_blank"
+             class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60">
+            Open het portaal &rarr;
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1">
+      <div class="max-w-7xl mx-auto p-4 space-y-4">
+        <div class="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur px-3 py-2 inline-flex items-center gap-2">
+          <button
+            id="tabContentBtn"
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold bg-slate-900 text-white"
+          >
+            Content
+          </button>
+          <button
+            id="tabFeedbackBtn"
+            type="button"
+            class="rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+          >
+            Feedback
+          </button>
+        </div>
+
+        <div id="contentTabPanel" class="grid lg:grid-cols-12 gap-4">
+
+        <!-- Left: Structure -->
+        <section class="lg:col-span-5 bg-white/90 border border-slate-200/80 rounded-3xl shadow-soft backdrop-blur">
+          <div class="p-4 border-b border-slate-200/70 flex items-center justify-between">
+            <div>
+              <div class="text-sm text-slate-500">Structuur</div>
+              <div class="admin-display font-semibold text-slate-900">Categorieen en subcategorieen</div>
+            </div>
+
+            <button id="addCategory"
+              class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800">
+              Categorie toevoegen
+            </button>
+          </div>
+
+          <div class="px-4 pt-4">
+            <label for="treeSearch" class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Zoek in structuur</label>
+            <input id="treeSearch" type="search"
+              class="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+              placeholder="Categorie, subcategorie of oplossing..." />
+            <div class="mt-1 text-[11px] text-slate-500">Tip: tijdens filteren staat drag-and-drop sorteren uit.</div>
+          </div>
+
+          <div class="p-4 space-y-4" id="tree"></div>
+        </section>
+
+        <!-- Right -->
+        <section class="lg:col-span-7 space-y-4">
+
+          <!-- Editor -->
+          <div class="bg-white/90 border border-slate-200/80 rounded-3xl shadow-soft backdrop-blur">
+            <div class="p-4 border-b border-slate-200/70 flex items-center justify-between">
+              <div>
+                <div class="text-sm text-slate-500">Oplossing</div>
+                <div class="admin-display font-semibold text-slate-900">Bewerk content</div>
+              </div>
+
+              <button id="addTopic"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+              >
+                + Oplossing toevoegen
+              </button>
+            </div>
+
+            <div class="p-4">
+              <div id="editorEmpty" class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/80 p-4 text-slate-600">
+                Kies links een subcategorie en selecteer daarna een oplossing, of voeg er een toe.
+              </div>
+
+              <form id="editor" class="hidden space-y-4">
+                <div class="grid sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Titel</label>
+                    <input id="f_title" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300" />
+                  </div>
+                  <div>
+                    <label class="text-xs font-semibold text-slate-600">Slug (url-id)</label>
+                    <input id="f_slug" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300" />
+                    <div class="mt-1 text-[11px] text-slate-500">Bijv: <span class="font-mono">internet-werkt-niet</span></div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Korte beschrijving (tegel)</label>
+                  <input id="f_summary" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300" />
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Uitleg (body)</label>
+                  <textarea id="f_body" rows="5" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"></textarea>
+                </div>
+
+                <!-- Media -->
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/50 p-4">
+                  <div class="text-sm font-semibold text-slate-900">Media (optioneel)</div>
+                  <div class="mt-1 text-xs text-slate-500">
+                    Uploads worden opgeslagen in je browser (IndexedDB). Als je hier <strong>Foto</strong> kiest, gebruiken we die ook als afbeelding op de tegels in de klantweergave. Voor delen met andere apparaten heb je later een upload/server nodig.
+                  </div>
+
+                  <div class="mt-3 grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">Type</label>
+                      <select id="f_mediaType"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300">
+                        <option value="">Geen</option>
+                        <option value="image">Foto</option>
+                        <option value="video">Video</option>
+                        <option value="audio">Audio / Podcast</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">Bijschrift (optioneel)</label>
+                      <input id="f_mediaCaption"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"
+                        placeholder="Bijv. Zo ziet het er uit" />
+                    </div>
+                  </div>
+
+                  <div class="mt-3 grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">Media URL (optioneel)</label>
+                      <input id="f_mediaUrl"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"
+                        placeholder="https://... (afbeelding/audio) of https://youtu.be/..." />
+                      <div class="mt-1 text-[11px] text-slate-500">
+                        Video URL: YouTube link of directe mp4-link. Audio URL: mp3/m4a/ogg/wav.
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-semibold text-slate-600">Upload (MP4 / foto / audio)</label>
+                      <input id="f_mediaFile" type="file"
+                        class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                        accept="image/*,video/mp4,audio/*" />
+                      <div class="mt-1 text-[11px] text-slate-500">
+                        Uploads worden in de Media Library gezet. Kies je <strong>Foto</strong>, dan tonen we die ook op de tegels. Klik desnoods "Gebruik" bij een item.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- hidden: idb key (voor library media) -->
+                  <input type="hidden" id="f_mediaIdbKey" />
+
+                  <div class="mt-3 flex flex-wrap gap-2">
+                    <button id="clearMedia" type="button"
+                      class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                      Media loskoppelen
+                    </button>
+                    <button id="openLibraryFromEditor" type="button"
+                      class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800">
+                      Open Media Library
+                    </button>
+                  </div>
+
+                  <div id="mediaPreviewWrap" class="mt-3 hidden">
+                    <div class="text-xs font-semibold text-slate-600">Preview</div>
+                    <div id="mediaPreview" class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3"></div>
+                  </div>
+
+                  <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                    <div class="text-sm font-semibold text-slate-900">Podcast (naast video)</div>
+                    <div class="mt-1 text-xs text-slate-500">
+                      Voeg hier een losse audioversie toe. Deze wordt naast de video getoond in de oplossing.
+                    </div>
+
+                    <div class="mt-3 grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="text-xs font-semibold text-slate-600">Podcast URL (optioneel)</label>
+                        <input id="f_podcastUrl"
+                          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"
+                          placeholder="https://... (mp3/m4a/ogg/wav)" />
+                      </div>
+
+                      <div>
+                        <label class="text-xs font-semibold text-slate-600">Upload podcast (audio)</label>
+                        <input id="f_podcastFile" type="file"
+                          class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                          accept="audio/*" />
+                      </div>
+                    </div>
+
+                    <div class="mt-3">
+                      <label class="text-xs font-semibold text-slate-600">Podcast bijschrift (optioneel)</label>
+                      <input id="f_podcastCaption"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"
+                        placeholder="Bijv. Luisterversie van deze uitleg" />
+                    </div>
+
+                    <input type="hidden" id="f_podcastIdbKey" />
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <button id="clearPodcast" type="button"
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                        Podcast loskoppelen
+                      </button>
+                    </div>
+
+                    <div id="podcastPreviewWrap" class="mt-3 hidden">
+                      <div class="text-xs font-semibold text-slate-600">Podcast preview</div>
+                      <div id="podcastPreview" class="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Stappen (1 per regel)</label>
+                  <textarea id="f_steps" rows="5" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300" placeholder="Stap 1&#10;Stap 2&#10;Stap 3"></textarea>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Tip (optioneel)</label>
+                  <textarea id="f_tip" rows="2" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"></textarea>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                  <button id="saveTopic" type="button"
+                    class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800">
+                    Opslaan
+                  </button>
+
+                  <button id="deleteTopic" type="button"
+                    class="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100">
+                    Verwijderen
+                  </button>
+
+                  <div class="ml-auto text-xs text-slate-500 flex items-center gap-2">
+                    <span class="font-mono" id="pathHint"></span>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Media Library -->
+          <div id="mediaLibraryCard" class="bg-white/90 border border-slate-200/80 rounded-3xl shadow-soft backdrop-blur">
+            <div class="p-4 border-b border-slate-200/70 flex items-center justify-between">
+              <div>
+                <div class="text-sm text-slate-500">Bibliotheek</div>
+                <div class="admin-display font-semibold text-slate-900">Media Library</div>
+              </div>
+              <button id="refreshLibrary"
+                class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60">
+                Ververs
+              </button>
+            </div>
+
+            <div class="p-4 space-y-3">
+              <div class="grid sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                  <label class="text-xs font-semibold text-slate-600">Upload (MP4 / foto / audio)</label>
+                  <input id="libUpload" type="file" accept="image/*,video/mp4,audio/*"
+                    class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" />
+                  <div class="mt-1 text-[11px] text-slate-500">
+                    Tip: geef je media herkenbare bestandsnamen (bijv. wifi-reset-iphone.jpg of wachtwoord-reset.mp3).
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-xs font-semibold text-slate-600">Filter</label>
+                  <select id="libFilter"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300">
+                    <option value="all">Alles</option>
+                    <option value="image">Foto</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid sm:grid-cols-3 gap-3">
+                <div class="sm:col-span-2">
+                  <label class="text-xs font-semibold text-slate-600">Zoek</label>
+                  <input id="libSearch"
+                    class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-slate-300"
+                    placeholder="Zoek op naam of key..." />
+                </div>
+                <div class="flex items-end">
+                  <button id="cleanupMissingRefs"
+                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                    Check refs
+                  </button>
+                </div>
+              </div>
+
+              <div id="libStats" class="text-xs text-slate-500"></div>
+
+              <div id="libraryList" class="space-y-2"></div>
+
+              <div class="text-xs text-slate-500">
+                "Gebruik" koppelt media aan de geselecteerde oplossing. "Gebruik als podcast" koppelt audio naast video. "Verwijder" haalt het item uit de bibliotheek (en kan oplossingen breken als ze het nog gebruiken).
+              </div>
+            </div>
+          </div>
+
+          <!-- JSON Import/Export -->
+          <div class="bg-white/90 border border-slate-200/80 rounded-3xl shadow-soft backdrop-blur">
+            <div class="p-4 border-b border-slate-200/70">
+              <div class="text-sm text-slate-500">Geavanceerd</div>
+              <div class="admin-display font-semibold text-slate-900">Import / Export JSON</div>
+            </div>
+            <div class="p-4 space-y-3">
+              <textarea id="jsonBox" rows="8"
+                class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-slate-300"
+                placeholder="Export verschijnt hier, of plak JSON om te importeren"></textarea>
+
+              <div class="flex flex-wrap gap-2">
+                <button id="exportJson"
+                  class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
+                  type="button"
+                >Export</button>
+
+                <button id="importJson"
+                  class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800"
+                  type="button"
+                >Import</button>
+              </div>
+
+              <div class="text-xs text-slate-500">
+                Tip: export eerst als backup voordat je importeert.
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </div>
+
+      <section id="feedbackTabPanel" class="hidden bg-white/90 border border-slate-200/80 rounded-3xl shadow-soft backdrop-blur">
+        <div class="p-4 border-b border-slate-200/70 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-sm text-slate-500">Inzichten</div>
+            <div class="admin-display font-semibold text-slate-900">Feedback vanuit portaal</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              id="refreshFeedback"
+              type="button"
+              class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60"
+            >
+              Ververs feedback
+            </button>
+            <button
+              id="resetFeedback"
+              type="button"
+              class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+            >
+              Reset feedback
+            </button>
+          </div>
+        </div>
+
+        <div class="p-4 space-y-4">
+          <div id="feedbackSummary" class="grid sm:grid-cols-3 gap-3"></div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Laatste feedback</div>
+            <div id="feedbackLast" class="mt-1 text-sm text-slate-700"></div>
+          </div>
+
+          <div>
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Per reden</div>
+            <div id="feedbackList" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 hidden max-w-sm rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-soft">
+      <div id="toastText" class="text-sm"></div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative h-full w-full flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl rounded-3xl bg-white border border-slate-200 shadow-soft overflow-hidden">
+          <div class="p-4 border-b border-slate-200/70 flex items-center justify-between">
+            <div class="min-w-0">
+              <div id="previewTitle" class="admin-display font-semibold text-slate-900 truncate">Preview</div>
+              <div id="previewSubtitle" class="text-xs text-slate-500 truncate"></div>
+            </div>
+            <button id="closePreview"
+              class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60">
+              Sluiten
+            </button>
+          </div>
+          <div id="previewBody" class="p-4 bg-slate-50"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  // =====================================================
+  // IndexedDB Media Store (Blobs: mp4/images)
+  // =====================================================
+  const MEDIA_DB = "kb_media_v1";
+  const MEDIA_STORE = "files";
+
+  function idbOpen() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(MEDIA_DB, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(MEDIA_STORE)) db.createObjectStore(MEDIA_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbSet(key, record) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MEDIA_STORE, "readwrite");
+      tx.objectStore(MEDIA_STORE).put(record, key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function idbGet(key) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MEDIA_STORE, "readonly");
+      const req = tx.objectStore(MEDIA_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbDel(key) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MEDIA_STORE, "readwrite");
+      tx.objectStore(MEDIA_STORE).delete(key);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function idbList() {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const items = [];
+      const tx = db.transaction(MEDIA_STORE, "readonly");
+      const store = tx.objectStore(MEDIA_STORE);
+      const req = store.openCursor();
+      req.onsuccess = () => {
+        const cur = req.result;
+        if (!cur) return;
+        items.push({ key: cur.key, record: cur.value });
+        cur.continue();
+      };
+      tx.oncomplete = () => resolve(items);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  function makeMediaKey(prefix = "media") {
+    const rand = (crypto?.randomUUID?.() || Math.random().toString(16).slice(2));
+    return `${prefix}_${Date.now()}_${rand}`;
+  }
+
+  function formatBytes(n) {
+    if (!Number.isFinite(n) || n <= 0) return "0 B";
+    const units = ["B","KB","MB","GB"];
+    let i = 0;
+    let v = n;
+    while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+    return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  // =====================================================
+  // Storage / Live update
+  // =====================================================
+  const STORAGE_KEY = "kb_data_v1";
+  const ISSUE_FEEDBACK_KEY = "kb_issue_feedback_v1";
+  const ISSUE_REASON_LABELS = {
+    unclear: "Antwoorden zijn onduidelijk",
+    missing: "Antwoord staat er niet tussen",
+    wrong: "Antwoord lost het probleem niet op",
+    video: "Video-uitleg helpt niet genoeg",
+    other: "Anders"
+  };
+  const ISSUE_REASON_ORDER = ["unclear", "missing", "wrong", "video", "other"];
+  const bc = ("BroadcastChannel" in window) ? new BroadcastChannel("kb_updates") : null;
+
+  function nowIso() { return new Date().toISOString(); }
+  function slugify(s) {
+    return String(s || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  }
+
+  function defaultData() {
+    return {
+      meta: { updatedAt: nowIso() },
+      categories: []
+    };
+  }
+
+  function loadData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      const seed = defaultData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      parsed.meta = parsed.meta || {};
+      if (!Array.isArray(parsed.categories)) parsed.categories = [];
+
+      return parsed;
+    }
+    catch {
+      const seed = defaultData();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+      return seed;
+    }
+  }
+
+  function saveData(data) {
+    data.meta = data.meta || {};
+    data.meta.updatedAt = nowIso();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (bc) bc.postMessage({ type: "updated", at: data.meta.updatedAt });
+    setStatus(`Opgeslagen - ${new Date().toLocaleTimeString()}`);
+    showToast("Opgeslagen. Klantweergave is bijgewerkt.");
+  }
+
+  // =====================================================
+  // Admin UI state + helpers
+  // =====================================================
+  let DATA = loadData();
+  let selected = { catId: null, subId: null, topicId: null };
+  // SortableJS instances (destroy/recreate on each tree render)
+  let SORTABLES = [];
+
+  const treeEl = document.getElementById("tree");
+  const treeSearch = document.getElementById("treeSearch");
+  const statusEl = document.getElementById("status");
+  const addCategoryBtn = document.getElementById("addCategory");
+  const addTopicBtn = document.getElementById("addTopic");
+  const editorEmpty = document.getElementById("editorEmpty");
+  const editorForm = document.getElementById("editor");
+
+  const f_title = document.getElementById("f_title");
+  const f_slug = document.getElementById("f_slug");
+  const f_summary = document.getElementById("f_summary");
+  const f_body = document.getElementById("f_body");
+  const f_steps = document.getElementById("f_steps");
+  const f_tip = document.getElementById("f_tip");
+
+  const f_mediaType = document.getElementById("f_mediaType");
+  const f_mediaCaption = document.getElementById("f_mediaCaption");
+  const f_mediaUrl = document.getElementById("f_mediaUrl");
+  const f_mediaFile = document.getElementById("f_mediaFile");
+  const f_mediaIdbKey = document.getElementById("f_mediaIdbKey");
+  const mediaPreviewWrap = document.getElementById("mediaPreviewWrap");
+  const mediaPreview = document.getElementById("mediaPreview");
+  const clearMediaBtn = document.getElementById("clearMedia");
+  const f_podcastUrl = document.getElementById("f_podcastUrl");
+  const f_podcastFile = document.getElementById("f_podcastFile");
+  const f_podcastCaption = document.getElementById("f_podcastCaption");
+  const f_podcastIdbKey = document.getElementById("f_podcastIdbKey");
+  const clearPodcastBtn = document.getElementById("clearPodcast");
+  const podcastPreviewWrap = document.getElementById("podcastPreviewWrap");
+  const podcastPreview = document.getElementById("podcastPreview");
+  const openLibraryFromEditorBtn = document.getElementById("openLibraryFromEditor");
+
+  const saveTopicBtn = document.getElementById("saveTopic");
+  const deleteTopicBtn = document.getElementById("deleteTopic");
+  const pathHint = document.getElementById("pathHint");
+
+  const jsonBox = document.getElementById("jsonBox");
+  const exportJsonBtn = document.getElementById("exportJson");
+  const importJsonBtn = document.getElementById("importJson");
+
+  const toastEl = document.getElementById("toast");
+  const toastTextEl = document.getElementById("toastText");
+  let toastTimer = null;
+
+  // Top tabs
+  const tabContentBtn = document.getElementById("tabContentBtn");
+  const tabFeedbackBtn = document.getElementById("tabFeedbackBtn");
+  const contentTabPanel = document.getElementById("contentTabPanel");
+  const feedbackTabPanel = document.getElementById("feedbackTabPanel");
+  let activeAdminTab = "content";
+
+  // Feedback tab
+  const refreshFeedbackBtn = document.getElementById("refreshFeedback");
+  const resetFeedbackBtn = document.getElementById("resetFeedback");
+  const feedbackSummary = document.getElementById("feedbackSummary");
+  const feedbackLast = document.getElementById("feedbackLast");
+  const feedbackList = document.getElementById("feedbackList");
+
+  // Library
+  const mediaLibraryCard = document.getElementById("mediaLibraryCard");
+  const libUpload = document.getElementById("libUpload");
+  const libFilter = document.getElementById("libFilter");
+  const libSearch = document.getElementById("libSearch");
+  const refreshLibraryBtn = document.getElementById("refreshLibrary");
+  const cleanupMissingRefsBtn = document.getElementById("cleanupMissingRefs");
+  const libStats = document.getElementById("libStats");
+  const libraryList = document.getElementById("libraryList");
+
+  // Preview modal
+  const previewModal = document.getElementById("previewModal");
+  const previewTitle = document.getElementById("previewTitle");
+  const previewSubtitle = document.getElementById("previewSubtitle");
+  const previewBody = document.getElementById("previewBody");
+  const closePreview = document.getElementById("closePreview");
+
+  function setStatus(text) { statusEl.textContent = text; }
+  function showToast(msg) {
+    toastTextEl.textContent = msg;
+    toastEl.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.add("hidden"), 2200);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  function toSafeCount(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.floor(n);
+  }
+
+  function loadIssueFeedbackStore() {
+    const fallback = { counts: {}, last: null };
+    const raw = localStorage.getItem(ISSUE_FEEDBACK_KEY);
+    if (!raw) return fallback;
+    try {
+      const parsed = JSON.parse(raw);
+      return {
+        counts: (parsed && typeof parsed.counts === "object" && parsed.counts) ? parsed.counts : {},
+        last: (parsed && parsed.last && typeof parsed.last === "object") ? parsed.last : null
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  function formatFeedbackReasonLabel(reasonId, explicitLabel = "") {
+    const fixed = String(explicitLabel || "").trim();
+    if (fixed) return fixed;
+    if (ISSUE_REASON_LABELS[reasonId]) return ISSUE_REASON_LABELS[reasonId];
+    return reasonId || "Onbekend";
+  }
+
+  function renderFeedbackPanel() {
+    const store = loadIssueFeedbackStore();
+    const counts = (store && store.counts && typeof store.counts === "object") ? store.counts : {};
+    const dynamicIds = Object.keys(counts)
+      .filter(id => !ISSUE_REASON_ORDER.includes(id))
+      .sort((a, b) => String(a).localeCompare(String(b), "nl"));
+    const orderedIds = [...ISSUE_REASON_ORDER, ...dynamicIds];
+
+    const entries = orderedIds.map(reasonId => ({
+      reasonId,
+      label: formatFeedbackReasonLabel(reasonId),
+      count: toSafeCount(counts[reasonId])
+    }));
+
+    const total = entries.reduce((sum, row) => sum + row.count, 0);
+    const nonZeroCount = entries.reduce((sum, row) => sum + (row.count > 0 ? 1 : 0), 0);
+    const lastAt = store?.last?.at ? new Date(store.last.at) : null;
+    const lastAtText = (lastAt && !Number.isNaN(lastAt.getTime())) ? lastAt.toLocaleString() : "Nog geen";
+    const lastReasonLabel = formatFeedbackReasonLabel(store?.last?.reasonId || "", store?.last?.label || "");
+
+    feedbackSummary.innerHTML = `
+      <div class="rounded-2xl border border-slate-200 bg-white p-4">
+        <div class="text-xs uppercase tracking-wider font-semibold text-slate-500">Totaal feedback</div>
+        <div class="mt-2 text-2xl font-extrabold text-slate-900">${total}</div>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-4">
+        <div class="text-xs uppercase tracking-wider font-semibold text-slate-500">Redenen met input</div>
+        <div class="mt-2 text-2xl font-extrabold text-slate-900">${nonZeroCount}</div>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-4">
+        <div class="text-xs uppercase tracking-wider font-semibold text-slate-500">Laatste inzending</div>
+        <div class="mt-2 text-sm font-semibold text-slate-900">${escapeHtml(lastAtText)}</div>
+      </div>
+    `;
+
+    feedbackLast.innerHTML = store?.last
+      ? `
+        <div class="font-semibold text-slate-900">${escapeHtml(lastReasonLabel)}</div>
+        <div class="mt-1 text-xs text-slate-500">${escapeHtml(lastAtText)}</div>
+      `
+      : `<span class="text-slate-600">Nog geen feedback ontvangen vanuit het portaal.</span>`;
+
+    feedbackList.innerHTML = entries.length ? entries.map(row => {
+      const pct = total > 0 ? Math.round((row.count / total) * 100) : 0;
+      return `
+        <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-sm font-semibold text-slate-900">${escapeHtml(row.label)}</div>
+            <div class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-700">${row.count}</div>
+          </div>
+          <div class="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div class="h-full bg-brand-500" style="width:${pct}%"></div>
+          </div>
+          <div class="mt-2 text-xs text-slate-500">${pct}% van totaal</div>
+        </article>
+      `;
+    }).join("") : `
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+        Er is nog geen feedback opgeslagen.
+      </div>
+    `;
+  }
+
+  function setTabButtonState(btn, isActive) {
+    btn.classList.toggle("bg-slate-900", isActive);
+    btn.classList.toggle("text-white", isActive);
+    btn.classList.toggle("border", !isActive);
+    btn.classList.toggle("border-slate-200", !isActive);
+    btn.classList.toggle("bg-white", !isActive);
+    btn.classList.toggle("text-slate-700", !isActive);
+    btn.classList.toggle("hover:bg-slate-100", !isActive);
+  }
+
+  function setAdminTab(tab) {
+    activeAdminTab = tab === "feedback" ? "feedback" : "content";
+    const feedbackOpen = activeAdminTab === "feedback";
+
+    contentTabPanel.classList.toggle("hidden", feedbackOpen);
+    feedbackTabPanel.classList.toggle("hidden", !feedbackOpen);
+
+    setTabButtonState(tabContentBtn, !feedbackOpen);
+    setTabButtonState(tabFeedbackBtn, feedbackOpen);
+
+    if (feedbackOpen) renderFeedbackPanel();
+  }
+
+  function findCategory(catId) { return DATA.categories.find(c => c.id === catId); }
+  function findSub(catId, subId) {
+    const c = findCategory(catId);
+    if (!c) return null;
+    return c.subcategories.find(s => s.id === subId);
+  }
+  function findTopic(catId, subId, topicId) {
+    const s = findSub(catId, subId);
+    if (!s) return null;
+    return s.topics.find(t => t.id === topicId);
+  }
+
+  function getYouTubeId(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "") || null;
+      if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+    } catch {}
+    return null;
+  }
+
+  // =====================================================
+  // Media preview (Editor)
+  // =====================================================
+  let editorPreviewUrl = null;
+  function revokeEditorPreviewUrl() {
+    if (editorPreviewUrl) {
+      URL.revokeObjectURL(editorPreviewUrl);
+      editorPreviewUrl = null;
+    }
+  }
+
+  let podcastPreviewUrl = null;
+  function revokePodcastPreviewUrl() {
+    if (podcastPreviewUrl) {
+      URL.revokeObjectURL(podcastPreviewUrl);
+      podcastPreviewUrl = null;
+    }
+  }
+
+  function renderMediaPreview(type, html) {
+    if (!type || !html) {
+      mediaPreviewWrap.classList.add("hidden");
+      mediaPreview.innerHTML = "";
+      return;
+    }
+    mediaPreviewWrap.classList.remove("hidden");
+    mediaPreview.innerHTML = html;
+  }
+
+  function renderPodcastPreview(html) {
+    if (!html) {
+      podcastPreviewWrap.classList.add("hidden");
+      podcastPreview.innerHTML = "";
+      return;
+    }
+    podcastPreviewWrap.classList.remove("hidden");
+    podcastPreview.innerHTML = html;
+  }
+
+  async function updatePodcastUI() {
+    revokePodcastPreviewUrl();
+
+    const url = (f_podcastUrl.value || "").trim();
+    const idbKey = (f_podcastIdbKey.value || "").trim();
+    const caption = (f_podcastCaption.value || "").trim();
+
+    if (!url && !idbKey) {
+      renderPodcastPreview("");
+      return;
+    }
+
+    if (url) {
+      renderPodcastPreview(`
+        <audio class="w-full rounded-lg border border-slate-200 bg-white" controls src="${escapeHtml(url)}"></audio>
+        ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+      `);
+      return;
+    }
+
+    const rec = await idbGet(idbKey);
+    if (!rec || !rec.blob) {
+      renderPodcastPreview("");
+      return;
+    }
+    podcastPreviewUrl = URL.createObjectURL(rec.blob);
+    renderPodcastPreview(`
+      <audio class="w-full rounded-lg border border-slate-200 bg-white" controls src="${podcastPreviewUrl}"></audio>
+      <div class="mt-2 text-[11px] text-slate-500">Library key: <span class="font-mono">${escapeHtml(idbKey)}</span></div>
+      ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+    `);
+  }
+
+  async function updateMediaUI() {
+    revokeEditorPreviewUrl();
+
+    const type = (f_mediaType.value || "").trim();
+    const caption = (f_mediaCaption.value || "").trim();
+    const url = (f_mediaUrl.value || "").trim();
+    const idbKey = (f_mediaIdbKey.value || "").trim();
+
+    if (!type) {
+      renderMediaPreview(null, null);
+      return;
+    }
+
+    // URL cases
+    if (url) {
+      if (type === "image") {
+        renderMediaPreview("image", `
+          <img src="${escapeHtml(url)}" alt="" class="w-full max-h-80 object-contain rounded-lg border border-slate-200 bg-white" />
+          ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+        `);
+        return;
+      }
+      if (type === "video") {
+        const yt = getYouTubeId(url);
+        if (yt) {
+          renderMediaPreview("video", `
+            <div class="aspect-video w-full overflow-hidden rounded-lg border border-slate-200 bg-black">
+              <iframe class="w-full h-full"
+                src="https://www.youtube.com/embed/${escapeHtml(yt)}"
+                title="YouTube video" frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen></iframe>
+            </div>
+            ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+          `);
+        } else {
+          renderMediaPreview("video", `
+            <video class="w-full rounded-lg border border-slate-200 bg-black" controls src="${escapeHtml(url)}"></video>
+            ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+          `);
+        }
+        return;
+      }
+      if (type === "audio") {
+        renderMediaPreview("audio", `
+          <audio class="w-full rounded-lg border border-slate-200 bg-white" controls src="${escapeHtml(url)}"></audio>
+          ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+        `);
+        return;
+      }
+    }
+
+    // IDB case
+    if (idbKey) {
+      const rec = await idbGet(idbKey);
+      if (!rec || !rec.blob) {
+        renderMediaPreview(null, null);
+        return;
+      }
+      editorPreviewUrl = URL.createObjectURL(rec.blob);
+
+      if (type === "image") {
+        renderMediaPreview("image", `
+          <img src="${editorPreviewUrl}" alt="" class="w-full max-h-80 object-contain rounded-lg border border-slate-200 bg-white" />
+          <div class="mt-2 text-[11px] text-slate-500">Library key: <span class="font-mono">${escapeHtml(idbKey)}</span></div>
+          ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+        `);
+        return;
+      }
+
+      if (type === "video") {
+        renderMediaPreview("video", `
+          <video class="w-full rounded-lg border border-slate-200 bg-black" controls src="${editorPreviewUrl}"></video>
+          <div class="mt-2 text-[11px] text-slate-500">Library key: <span class="font-mono">${escapeHtml(idbKey)}</span></div>
+          ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+        `);
+        return;
+      }
+
+      if (type === "audio") {
+        renderMediaPreview("audio", `
+          <audio class="w-full rounded-lg border border-slate-200 bg-white" controls src="${editorPreviewUrl}"></audio>
+          <div class="mt-2 text-[11px] text-slate-500">Library key: <span class="font-mono">${escapeHtml(idbKey)}</span></div>
+          ${caption ? `<div class="mt-2 text-xs text-slate-600">${escapeHtml(caption)}</div>` : ""}
+        `);
+        return;
+      }
+    }
+
+    renderMediaPreview(null, null);
+  }
+
+  function topicMediaRefCount(key) {
+    let count = 0;
+    for (const cat of DATA.categories) {
+      for (const sub of cat.subcategories) {
+        for (const t of sub.topics) {
+          if (t.media && t.media.source === "idb" && t.media.key === key) count++;
+          if (t.podcast && t.podcast.source === "idb" && t.podcast.key === key) count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  // =====================================================
+  // Media Library
+  // =====================================================
+  let libObjectUrls = [];
+  function revokeLibObjectUrls() {
+    for (const u of libObjectUrls) URL.revokeObjectURL(u);
+    libObjectUrls = [];
+  }
+
+  function openPreviewModal({ title, subtitle, bodyHtml }) {
+    previewTitle.textContent = title || "Preview";
+    previewSubtitle.textContent = subtitle || "";
+    previewBody.innerHTML = bodyHtml || "";
+    previewModal.classList.remove("hidden");
+  }
+
+  function closePreviewModal() {
+    previewModal.classList.add("hidden");
+    previewBody.innerHTML = "";
+  }
+
+  closePreview.addEventListener("click", closePreviewModal);
+  previewModal.addEventListener("click", (e) => {
+    if (e.target === previewModal || e.target === previewModal.firstElementChild) closePreviewModal();
+  });
+
+  async function addFileToLibrary(file) {
+    const mime = String(file.type || "").toLowerCase();
+    const filename = String(file.name || "").toLowerCase();
+    const isImg = mime.startsWith("image/") || (!mime && /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(filename));
+    const isVid = mime.startsWith("video/") || (!mime && /\.(mp4|webm|mov|m4v)$/i.test(filename));
+    const isAud = mime.startsWith("audio/") || (!mime && /\.(mp3|m4a|ogg|wav|aac|flac)$/i.test(filename));
+    if (!isImg && !isVid && !isAud) throw new Error("Unsupported file");
+
+    // Voor makkelijkste flow: video alleen mp4
+    if (isVid && file.type !== "video/mp4") {
+      const ok = confirm("Dit is geen MP4. Toch opslaan?");
+      if (!ok) throw new Error("Not mp4");
+    }
+
+    const mediaType = isImg ? "image" : (isVid ? "video" : "audio");
+    const key = makeMediaKey(mediaType);
+    const record = {
+      blob: file,
+      type: mediaType,
+      name: file.name || key,
+      size: file.size || 0,
+      mime: file.type || "",
+      createdAt: nowIso()
+    };
+    await idbSet(key, record);
+    return key;
+  }
+
+  async function renderLibrary() {
+    const all = await idbList();
+    const filter = libFilter.value || "all";
+    const q = (libSearch.value || "").trim().toLowerCase();
+
+    // sort newest first
+    all.sort((a, b) => {
+      const da = a.record?.createdAt ? Date.parse(a.record.createdAt) : 0;
+      const db = b.record?.createdAt ? Date.parse(b.record.createdAt) : 0;
+      return db - da;
+    });
+
+    let filtered = all;
+    if (filter !== "all") filtered = filtered.filter(x => x.record?.type === filter);
+    if (q) filtered = filtered.filter(x =>
+      String(x.record?.name || "").toLowerCase().includes(q) ||
+      String(x.key || "").toLowerCase().includes(q)
+    );
+
+    const totalSize = filtered.reduce((sum, x) => sum + (x.record?.size || 0), 0);
+    libStats.textContent = `Items: ${filtered.length} - Totale grootte (filter): ${formatBytes(totalSize)}`;
+
+    revokeLibObjectUrls();
+
+    libraryList.innerHTML = filtered.length ? filtered.map(({ key, record }) => {
+      const type = record?.type || "unknown";
+      const name = record?.name || key;
+      const size = formatBytes(record?.size || 0);
+      const created = record?.createdAt ? new Date(record.createdAt).toLocaleString() : "-";
+      const refs = topicMediaRefCount(key);
+
+      // lightweight thumbnail: only for images
+      let thumb = "";
+      if (type === "image" && record?.blob) {
+        const url = URL.createObjectURL(record.blob);
+        libObjectUrls.push(url);
+        thumb = `<img src="${url}" class="h-12 w-12 rounded-lg object-cover border border-slate-200 bg-white" alt="">`;
+      } else {
+        const glyph = type === "video"
+          ? `<svg class="h-6 w-6 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14V10z"/><rect x="3" y="6" width="12" height="12" rx="2" ry="2"/></svg>`
+          : type === "audio"
+            ? `<svg class="h-6 w-6 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`
+            : `<svg class="h-6 w-6 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 16l3-3 2 2 3-4 2 5"/></svg>`;
+        thumb = `
+          <div class="h-12 w-12 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center">
+            ${glyph}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div class="flex items-start gap-3">
+            ${thumb}
+
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="font-medium text-slate-900 truncate">${escapeHtml(name)}</div>
+                  <div class="text-xs text-slate-500 truncate">
+                    <span class="uppercase">${escapeHtml(type)}</span> - ${escapeHtml(size)} - ${escapeHtml(created)}
+                  </div>
+                  <div class="mt-1 text-[11px] text-slate-500 truncate">
+                    key: <span class="font-mono">${escapeHtml(key)}</span> - gebruikt: ${refs}
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 justify-end">
+                  <button class="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60"
+                    data-preview="${escapeHtml(key)}">
+                    Preview
+                  </button>
+
+                  <button class="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                    data-use="${escapeHtml(key)}">
+                    Gebruik
+                  </button>
+
+                  ${type === "audio" ? `
+                    <button class="rounded-xl border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 hover:bg-brand-100"
+                      data-use-podcast="${escapeHtml(key)}">
+                      Gebruik als podcast
+                    </button>
+                  ` : ``}
+
+                  <button class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                    data-del="${escapeHtml(key)}">
+                    Verwijder
+                  </button>
+                </div>
+              </div>
+
+              ${refs > 0 ? `
+                <div class="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  Dit item wordt gebruikt door ${refs} oplossing(en).
+                </div>
+              ` : ``}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("") : `
+      <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-slate-600">
+        Geen media gevonden in de library (of filter/zoek is te streng).
+      </div>
+    `;
+
+    // bind buttons
+    libraryList.querySelectorAll("[data-use]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const key = btn.getAttribute("data-use");
+        const rec = await idbGet(key);
+        if (!rec) return;
+
+        if (!selected.topicId) {
+          alert("Selecteer eerst een oplossing om media te koppelen.");
+          return;
+        }
+
+        // Koppel aan editor velden
+        f_mediaType.value = rec.type;
+        f_mediaUrl.value = "";
+        f_mediaIdbKey.value = key;
+
+        await updateMediaUI();
+        showToast("Media gekoppeld aan huidige oplossing.");
+      });
+    });
+
+    libraryList.querySelectorAll("[data-use-podcast]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const key = btn.getAttribute("data-use-podcast");
+        const rec = await idbGet(key);
+        if (!rec || rec.type !== "audio") return;
+
+        if (!selected.topicId) {
+          alert("Selecteer eerst een oplossing om podcast te koppelen.");
+          return;
+        }
+
+        f_podcastUrl.value = "";
+        f_podcastIdbKey.value = key;
+        if (!f_podcastCaption.value.trim()) {
+          f_podcastCaption.value = "Podcastversie";
+        }
+        await updatePodcastUI();
+        showToast("Podcast gekoppeld aan huidige oplossing.");
+      });
+    });
+
+    libraryList.querySelectorAll("[data-del]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const key = btn.getAttribute("data-del");
+        const refs = topicMediaRefCount(key);
+
+        const msg = refs > 0
+          ? `Dit item wordt gebruikt door ${refs} oplossing(en). Verwijderen kan die oplossingen breken. Toch verwijderen?`
+          : "Media verwijderen uit library?";
+        if (!confirm(msg)) return;
+
+        await idbDel(key);
+        await renderLibrary();
+        showToast("Media verwijderd.");
+      });
+    });
+
+    libraryList.querySelectorAll("[data-preview]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const key = btn.getAttribute("data-preview");
+        const rec = await idbGet(key);
+        if (!rec || !rec.blob) return;
+
+        const objUrl = URL.createObjectURL(rec.blob);
+        // modal own revoke on close: easiest = revoke on close click by storing once
+        const title = rec.name || "Preview";
+        const subtitle = `type: ${rec.type} - ${formatBytes(rec.size || 0)} - key: ${key}`;
+
+        const bodyHtml = rec.type === "image"
+          ? `<img src="${objUrl}" class="w-full rounded-xl border border-slate-200 bg-white object-contain max-h-[70vh]" alt="">`
+          : rec.type === "audio"
+            ? `<audio src="${objUrl}" controls class="w-full rounded-xl border border-slate-200 bg-white"></audio>`
+            : `<video src="${objUrl}" controls class="w-full rounded-xl border border-slate-200 bg-black max-h-[70vh]"></video>`;
+
+        openPreviewModal({ title, subtitle, bodyHtml });
+
+        const cleanup = () => {
+          URL.revokeObjectURL(objUrl);
+          closePreview.removeEventListener("click", cleanup);
+        };
+        closePreview.addEventListener("click", cleanup);
+      });
+    });
+  }
+
+  // =====================================================
+  // Tree render + editor load/save
+  // =====================================================
+  function updateEditorVisibility() {
+    const canAddTopic = !!(selected.catId && selected.subId);
+    addTopicBtn.disabled = !canAddTopic;
+
+    if (!selected.topicId) {
+      editorForm.classList.add("hidden");
+      editorEmpty.classList.remove("hidden");
+      pathHint.textContent = "";
+      return;
+    }
+    editorEmpty.classList.add("hidden");
+    editorForm.classList.remove("hidden");
+  }
+
+  async function loadTopicIntoEditor() {
+    updateEditorVisibility();
+    if (!selected.topicId) return;
+
+    const t = findTopic(selected.catId, selected.subId, selected.topicId);
+    if (!t) return;
+
+    f_title.value = t.title || "";
+    f_slug.value = t.id || "";
+    f_summary.value = t.summary || "";
+    f_body.value = t.body || "";
+    f_steps.value = (t.steps || []).join("\n");
+    f_tip.value = t.tip || "";
+
+    // Media
+    const m = t.media || null;
+    if (!m) {
+      f_mediaType.value = "";
+      f_mediaUrl.value = "";
+      f_mediaIdbKey.value = "";
+      f_mediaCaption.value = "";
+    } else {
+      f_mediaType.value = m.type || "";
+      f_mediaCaption.value = m.caption || "";
+      if (m.source === "idb") {
+        f_mediaIdbKey.value = m.key || "";
+        f_mediaUrl.value = "";
+      } else if (m.source === "url") {
+        f_mediaUrl.value = m.value || "";
+        f_mediaIdbKey.value = "";
+      } else {
+        f_mediaUrl.value = "";
+        f_mediaIdbKey.value = "";
+      }
+    }
+
+    // Podcast (apart, naast media)
+    const p = t.podcast || null;
+    if (!p) {
+      f_podcastUrl.value = "";
+      f_podcastIdbKey.value = "";
+      f_podcastCaption.value = "";
+    } else {
+      f_podcastCaption.value = p.caption || "";
+      if (p.source === "idb") {
+        f_podcastIdbKey.value = p.key || "";
+        f_podcastUrl.value = "";
+      } else if (p.source === "url") {
+        f_podcastUrl.value = p.value || "";
+        f_podcastIdbKey.value = "";
+      } else {
+        f_podcastUrl.value = "";
+        f_podcastIdbKey.value = "";
+      }
+    }
+
+    await updateMediaUI();
+    await updatePodcastUI();
+    pathHint.textContent = `#/${selected.catId}/${selected.subId}/${(t.id || "")}`;
+  }
+
+  function renderTree() {
+    const query = (treeSearch?.value || "").trim().toLowerCase();
+    try { SORTABLES.forEach(s => { try { s.destroy(); } catch {} }); } catch {}
+    SORTABLES = [];
+
+    const visible = DATA.categories
+      .map(cat => {
+        const catMatch = (cat.name || "").toLowerCase().includes(query);
+        const subcategories = (cat.subcategories || [])
+          .map(sub => {
+            const subMatch = (sub.name || "").toLowerCase().includes(query);
+            const allTopics = sub.topics || [];
+            const matchedTopics = query
+              ? allTopics.filter(t =>
+                  (t.title || "").toLowerCase().includes(query) ||
+                  (t.summary || "").toLowerCase().includes(query))
+              : allTopics;
+            const topicMatch = matchedTopics.length > 0;
+            if (!query || catMatch || subMatch || topicMatch) {
+              return { ...sub, _visibleTopics: matchedTopics };
+            }
+            return null;
+          })
+          .filter(Boolean);
+        const showCategory = !query || catMatch || subcategories.length > 0;
+        return { cat, subcategories, showCategory };
+      })
+      .filter(item => item.showCategory);
+
+    if (!visible.length) {
+      const msg = query
+        ? `Geen resultaten voor <span class="font-semibold">${escapeHtml(query)}</span>.`
+        : "Nog geen categorieen beschikbaar.";
+      treeEl.innerHTML = `
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-slate-600">
+          ${msg}
+        </div>
+      `;
+      return;
+    }
+
+    treeEl.innerHTML = visible.map(({ cat, subcategories }) => {
+      const isCatSelected = selected.catId === cat.id;
+
+      return `
+        <div class="rounded-2xl border border-slate-200 bg-white overflow-hidden" data-cat-item data-cat-id="${escapeHtml(cat.id)}">
+          <div class="p-3 bg-slate-50/80 border-b border-slate-200 flex items-center gap-2">
+            <span class="select-none cursor-grab text-slate-400 hover:text-slate-600 px-1" title="Sleep om te sorteren" data-drag-handle="cat">&#9776;</span>
+            <button class="text-left font-semibold text-slate-900 flex-1" data-select-cat="${escapeHtml(cat.id)}">
+              ${escapeHtml(cat.name)}
+            </button>
+
+            <button class="rounded-lg px-2 py-1 text-xs border border-slate-200 bg-white hover:border-brand-200 hover:bg-brand-50/60"
+              data-rename-cat="${escapeHtml(cat.id)}">Naam</button>
+            <button class="rounded-lg px-2 py-1 text-xs border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+              data-del-cat="${escapeHtml(cat.id)}">Del</button>
+            <button class="rounded-lg px-2 py-1 text-xs bg-slate-900 text-white hover:bg-slate-800"
+              data-add-sub="${escapeHtml(cat.id)}">+ Sub</button>
+          </div>
+
+          <div class="p-3 space-y-2" data-sub-list data-cat-id="${escapeHtml(cat.id)}">
+            ${subcategories.length ? subcategories.map(sub => {
+              const isSubSelected = isCatSelected && selected.subId === sub.id;
+              const visibleTopicCount = query ? (sub._visibleTopics?.length || 0) : sub.topics.length;
+
+              return `
+                <div class="rounded-xl border ${isSubSelected ? "border-brand-400 bg-brand-50/30" : "border-slate-200 bg-white"}" data-sub-item data-sub-id="${escapeHtml(sub.id)}">
+                  <div class="px-3 py-2 flex items-center gap-2">
+                    <span class="select-none cursor-grab text-slate-400 hover:text-slate-600 px-1" title="Sleep om te sorteren" data-drag-handle="sub">&#9776;</span>
+                    <button class="text-left text-sm font-medium flex-1 ${isSubSelected ? "text-slate-900" : "text-slate-700"}"
+                      data-select-sub="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}">
+                      ${escapeHtml(sub.name)}
+                      <span class="ml-2 text-xs text-slate-400">(${visibleTopicCount})</span>
+                    </button>
+
+                    <button class="rounded-lg px-2 py-1 text-xs border border-slate-200 bg-white hover:border-brand-200 hover:bg-brand-50/60"
+                      data-rename-sub="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}">Naam</button>
+                    <button class="rounded-lg px-2 py-1 text-xs border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                      data-del-sub="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}">Del</button>
+                  </div>
+
+                  ${isSubSelected ? `
+                    <div class="px-3 pb-3">
+                      <div class="text-xs font-semibold text-slate-500 uppercase mt-1">Oplossingen</div>
+                      <div class="mt-2 space-y-1" data-topic-list data-cat-id="${escapeHtml(cat.id)}" data-sub-id="${escapeHtml(sub.id)}">
+                        ${(query ? (sub._visibleTopics || []) : sub.topics).map(t => {
+                          const active = selected.topicId === t.id;
+                          const hasMedia = !!(
+                            (t.media && (t.media.value || t.media.key)) ||
+                            (t.podcast && (t.podcast.value || t.podcast.key))
+                          );
+                          return `
+                            <div class="flex items-stretch gap-2" data-topic-item data-topic-id="${escapeHtml(t.id)}">
+                              <span class="select-none cursor-grab text-slate-400 hover:text-slate-600 px-1 self-center"
+                                title="Sleep om te sorteren" data-drag-handle="topic">&#9776;</span>
+                              <button
+                                class="flex-1 w-full text-left rounded-xl px-3 py-2 text-sm border
+                                       ${active ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-200 hover:border-brand-200 hover:bg-brand-50/40"}"
+                                data-select-topic="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}::${escapeHtml(t.id)}">
+                                <div class="flex items-center justify-between gap-2">
+                                  <div class="min-w-0">
+                                    <div class="truncate">${escapeHtml(t.title)}</div>
+                                    <div class="text-xs ${active ? "text-white/70" : "text-slate-500"} truncate">${escapeHtml(t.summary || "")}</div>
+                                  </div>
+                                  ${hasMedia ? `<span class="text-xs ${active ? "text-white/80" : "text-slate-400"}">media</span>` : ``}
+                                </div>
+                              </button>
+                            </div>
+                          `;
+                        }).join("")}
+                      </div>
+                    </div>
+                  ` : ""}
+                </div>
+              `;
+            }).join("") : `
+              <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-500">
+                Nog geen subcategorieen. Klik op <strong>+ Sub</strong> om er een toe te voegen.
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // bindings
+    treeEl.querySelectorAll("[data-select-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selected.catId = btn.getAttribute("data-select-cat");
+        selected.subId = null;
+        selected.topicId = null;
+        updateEditorVisibility();
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-add-sub]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const catId = btn.getAttribute("data-add-sub");
+        const name = prompt("Naam subcategorie:");
+        if (!name) return;
+
+        const subId = slugify(name);
+        const cat = findCategory(catId);
+        if (!cat) return;
+
+        if (cat.subcategories.some(s => s.id === subId)) {
+          alert("Deze subcategorie bestaat al (slug conflict). Kies een andere naam.");
+          return;
+        }
+
+        cat.subcategories.push({ id: subId, name, topics: [] });
+        selected = { catId, subId, topicId: null };
+        saveData(DATA);
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-rename-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const catId = btn.getAttribute("data-rename-cat");
+        const cat = findCategory(catId);
+        if (!cat) return;
+        const name = prompt("Nieuwe naam categorie:", cat.name);
+        if (!name) return;
+        cat.name = name;
+        saveData(DATA);
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-del-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const catId = btn.getAttribute("data-del-cat");
+        if (!confirm("Categorie verwijderen inclusief subcategorieen en oplossingen?")) return;
+
+        DATA.categories = DATA.categories.filter(c => c.id !== catId);
+        if (selected.catId === catId) selected = { catId: null, subId: null, topicId: null };
+        updateEditorVisibility();
+        saveData(DATA);
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-select-sub]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId] = btn.getAttribute("data-select-sub").split("::");
+        selected = { catId, subId, topicId: null };
+        updateEditorVisibility();
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-rename-sub]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId] = btn.getAttribute("data-rename-sub").split("::");
+        const sub = findSub(catId, subId);
+        if (!sub) return;
+        const name = prompt("Nieuwe naam subcategorie:", sub.name);
+        if (!name) return;
+        sub.name = name;
+        saveData(DATA);
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-del-sub]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId] = btn.getAttribute("data-del-sub").split("::");
+        if (!confirm("Subcategorie verwijderen inclusief oplossingen?")) return;
+
+        const cat = findCategory(catId);
+        if (!cat) return;
+
+        cat.subcategories = cat.subcategories.filter(s => s.id !== subId);
+        if (selected.subId === subId) selected = { catId, subId: null, topicId: null };
+        updateEditorVisibility();
+        saveData(DATA);
+        renderTree();
+      });
+    });
+
+    treeEl.querySelectorAll("[data-select-topic]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const [catId, subId, topicId] = btn.getAttribute("data-select-topic").split("::");
+        selected = { catId, subId, topicId };
+        await loadTopicIntoEditor();
+        renderTree();
+      });
+    });
+ 
+    // Drag & drop sortering (categorieen, subcategorieen, oplossingen)
+    if (window.Sortable) {
+      if (query) return;
+
+      const reorderById = (arr, orderIds) => {
+        const pos = new Map(orderIds.map((id, idx) => [id, idx]));
+        arr.sort((a, b) => (pos.get(a.id) ?? 1e9) - (pos.get(b.id) ?? 1e9));
+      };
+
+      // 1) Categorieen
+      try {
+        const catSortable = Sortable.create(treeEl, {
+          animation: 150,
+          handle: '[data-drag-handle="cat"]',
+          draggable: '[data-cat-item]',
+          onEnd: () => {
+            const order = [...treeEl.querySelectorAll('[data-cat-item]')].map(el => el.getAttribute('data-cat-id'));
+            reorderById(DATA.categories, order);
+            saveData(DATA);
+            showToast("Volgorde categorieen opgeslagen.");
+            renderTree();
+          }
+        });
+        SORTABLES.push(catSortable);
+      } catch {}
+
+      // 2) Subcategorieen (per categorie)
+      treeEl.querySelectorAll('[data-sub-list]').forEach(listEl => {
+        const catId = listEl.getAttribute('data-cat-id');
+        const cat = findCategory(catId);
+        if (!cat) return;
+
+        try {
+          const subSortable = Sortable.create(listEl, {
+            animation: 150,
+            handle: '[data-drag-handle="sub"]',
+            draggable: '[data-sub-item]',
+            onEnd: () => {
+              const order = [...listEl.querySelectorAll('[data-sub-item]')].map(el => el.getAttribute('data-sub-id'));
+              reorderById(cat.subcategories, order);
+              saveData(DATA);
+              showToast("Volgorde subcategorieen opgeslagen.");
+              renderTree();
+            }
+          });
+          SORTABLES.push(subSortable);
+        } catch {}
+      });
+
+      // 3) Oplossingen (alleen zichtbaar in geselecteerde subcategorie)
+      treeEl.querySelectorAll('[data-topic-list]').forEach(listEl => {
+        const catId = listEl.getAttribute('data-cat-id');
+        const subId = listEl.getAttribute('data-sub-id');
+        const sub = findSub(catId, subId);
+        if (!sub) return;
+
+        try {
+          const topicSortable = Sortable.create(listEl, {
+            animation: 150,
+            handle: '[data-drag-handle="topic"]',
+            draggable: '[data-topic-item]',
+            onEnd: () => {
+              const order = [...listEl.querySelectorAll('[data-topic-item]')].map(el => el.getAttribute('data-topic-id'));
+              reorderById(sub.topics, order);
+              saveData(DATA);
+              showToast("Volgorde oplossingen opgeslagen.");
+              renderTree();
+            }
+          });
+          SORTABLES.push(topicSortable);
+        } catch {}
+      });
+    }
+
+  }
+
+  // =====================================================
+  // Actions + events
+  // =====================================================
+  tabContentBtn.addEventListener("click", () => setAdminTab("content"));
+  tabFeedbackBtn.addEventListener("click", () => setAdminTab("feedback"));
+  refreshFeedbackBtn.addEventListener("click", () => {
+    renderFeedbackPanel();
+    showToast("Feedbackoverzicht vernieuwd.");
+  });
+  resetFeedbackBtn.addEventListener("click", () => {
+    if (!confirm("Alle feedback resetten naar 0?")) return;
+    localStorage.setItem(ISSUE_FEEDBACK_KEY, JSON.stringify({ counts: {}, last: null }));
+    renderFeedbackPanel();
+    showToast("Feedback is gereset.");
+  });
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === ISSUE_FEEDBACK_KEY && activeAdminTab === "feedback") {
+      renderFeedbackPanel();
+    }
+  });
+
+  if (treeSearch) {
+    treeSearch.addEventListener("input", renderTree);
+  }
+
+  addCategoryBtn.addEventListener("click", () => {
+    const name = prompt("Naam categorie (bijv. Telefoon):");
+    if (!name) return;
+
+    const id = slugify(name);
+    if (DATA.categories.some(c => c.id === id)) {
+      alert("Deze categorie bestaat al (slug conflict). Kies een andere naam.");
+      return;
+    }
+
+    DATA.categories.push({ id, name, subcategories: [] });
+    selected = { catId: id, subId: null, topicId: null };
+    saveData(DATA);
+    renderTree();
+  });
+
+  addTopicBtn.addEventListener("click", async () => {
+    if (!selected.catId || !selected.subId) return;
+
+    const title = prompt("Titel oplossing:");
+    if (!title) return;
+
+    const id = slugify(title);
+    const sub = findSub(selected.catId, selected.subId);
+    if (!sub) return;
+
+    if (sub.topics.some(t => t.id === id)) {
+      alert("Deze oplossing bestaat al (slug conflict). Kies een andere titel.");
+      return;
+    }
+
+    sub.topics.push({
+      id,
+      title,
+      summary: "",
+      body: "",
+      steps: [],
+      tip: "",
+      media: null,
+      podcast: null
+    });
+
+    selected.topicId = id;
+    saveData(DATA);
+    await loadTopicIntoEditor();
+    renderTree();
+  });
+
+  // Editor media inputs
+  f_mediaType.addEventListener("change", updateMediaUI);
+  f_mediaCaption.addEventListener("input", updateMediaUI);
+  f_podcastCaption.addEventListener("input", updatePodcastUI);
+
+  f_mediaUrl.addEventListener("input", async () => {
+    // URL invullen => idb key leeg
+    if ((f_mediaUrl.value || "").trim()) {
+      f_mediaIdbKey.value = "";
+    }
+    await updateMediaUI();
+  });
+
+  f_podcastUrl.addEventListener("input", async () => {
+    if ((f_podcastUrl.value || "").trim()) {
+      f_podcastIdbKey.value = "";
+    }
+    await updatePodcastUI();
+  });
+
+  // Upload vanuit editor: gaat de library in en wordt meteen gekoppeld
+  f_mediaFile.addEventListener("change", async () => {
+    const file = f_mediaFile.files?.[0];
+    if (!file) return;
+
+    try {
+      const key = await addFileToLibrary(file);
+      await renderLibrary();
+
+      if (!selected.topicId) {
+        showToast("Media toegevoegd aan library.");
+        f_mediaFile.value = "";
+        return;
+      }
+
+      const rec = await idbGet(key);
+      f_mediaType.value = rec.type;
+      f_mediaUrl.value = "";
+      f_mediaIdbKey.value = key;
+
+      await updateMediaUI();
+      showToast("Media geupload + gekoppeld.");
+    } catch (e) {
+      alert("Upload mislukt. Mogelijk storage limiet of bestandstype.");
+      console.error(e);
+    } finally {
+      f_mediaFile.value = "";
+    }
+  });
+
+  // Upload podcast vanuit editor: gaat de library in en wordt gekoppeld als podcast
+  f_podcastFile.addEventListener("change", async () => {
+    const file = f_podcastFile.files?.[0];
+    if (!file) return;
+
+    try {
+      const key = await addFileToLibrary(file);
+      await renderLibrary();
+
+      if (!selected.topicId) {
+        showToast("Podcast toegevoegd aan library.");
+        f_podcastFile.value = "";
+        return;
+      }
+
+      const rec = await idbGet(key);
+      if (!rec || rec.type !== "audio") {
+        alert("Dit bestand is geen audio. Kies een audiobestand.");
+        return;
+      }
+
+      f_podcastUrl.value = "";
+      f_podcastIdbKey.value = key;
+      await updatePodcastUI();
+      showToast("Podcast geupload + gekoppeld.");
+    } catch (e) {
+      alert("Podcast upload mislukt. Mogelijk storage limiet of bestandstype.");
+      console.error(e);
+    } finally {
+      f_podcastFile.value = "";
+    }
+  });
+
+  clearMediaBtn.addEventListener("click", async () => {
+    f_mediaType.value = "";
+    f_mediaUrl.value = "";
+    f_mediaIdbKey.value = "";
+    f_mediaCaption.value = "";
+    await updateMediaUI();
+    showToast("Media losgekoppeld (niet verwijderd uit library).");
+  });
+
+  clearPodcastBtn.addEventListener("click", async () => {
+    f_podcastUrl.value = "";
+    f_podcastIdbKey.value = "";
+    f_podcastCaption.value = "";
+    await updatePodcastUI();
+    showToast("Podcast losgekoppeld (niet verwijderd uit library).");
+  });
+
+  openLibraryFromEditorBtn.addEventListener("click", () => {
+    mediaLibraryCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    libSearch.focus();
+  });
+
+  saveTopicBtn.addEventListener("click", async () => {
+    const t = findTopic(selected.catId, selected.subId, selected.topicId);
+    if (!t) return;
+
+    const newTitle = (f_title.value || "").trim();
+    const newSlug = slugify((f_slug.value || "").trim() || newTitle);
+
+    if (!newTitle) { alert("Titel is verplicht."); return; }
+    if (!newSlug) { alert("Slug is verplicht."); return; }
+
+    const sub = findSub(selected.catId, selected.subId);
+    if (!sub) return;
+
+    const slugConflict = sub.topics.some(x => x.id === newSlug && x !== t);
+    if (slugConflict) {
+      alert("Slug bestaat al in deze subcategorie. Kies een unieke slug.");
+      return;
+    }
+
+    t.title = newTitle;
+    t.id = newSlug;
+    t.summary = (f_summary.value || "").trim();
+    t.body = (f_body.value || "").trim();
+    t.steps = (f_steps.value || "").split("\n").map(x => x.trim()).filter(Boolean);
+    t.tip = (f_tip.value || "").trim();
+
+    // Media opslaan
+    const mt = (f_mediaType.value || "").trim();
+    const caption = (f_mediaCaption.value || "").trim();
+    const url = (f_mediaUrl.value || "").trim();
+    const idbKey = (f_mediaIdbKey.value || "").trim();
+
+    let media = null;
+    if (mt) {
+      if (idbKey) media = { type: mt, source: "idb", key: idbKey, caption };
+      else if (url) media = { type: mt, source: "url", value: url, caption };
+    }
+    t.media = media;
+
+    const podcastCaption = (f_podcastCaption.value || "").trim();
+    const podcastUrl = (f_podcastUrl.value || "").trim();
+    const podcastIdbKey = (f_podcastIdbKey.value || "").trim();
+    let podcast = null;
+    if (podcastIdbKey) podcast = { source: "idb", key: podcastIdbKey, caption: podcastCaption };
+    else if (podcastUrl) podcast = { source: "url", value: podcastUrl, caption: podcastCaption };
+    t.podcast = podcast;
+
+    selected.topicId = newSlug;
+
+    saveData(DATA);
+    await loadTopicIntoEditor();
+    renderTree();
+    await renderLibrary();
+  });
+
+  deleteTopicBtn.addEventListener("click", async () => {
+    if (!confirm("Oplossing verwijderen?")) return;
+
+    const sub = findSub(selected.catId, selected.subId);
+    if (!sub) return;
+
+    sub.topics = sub.topics.filter(t => t.id !== selected.topicId);
+    selected.topicId = null;
+    updateEditorVisibility();
+    saveData(DATA);
+    renderTree();
+    await renderLibrary();
+  });
+
+  // JSON tools
+  exportJsonBtn.addEventListener("click", () => {
+    jsonBox.value = JSON.stringify(DATA, null, 2);
+    showToast("Export klaar.");
+  });
+
+  importJsonBtn.addEventListener("click", async () => {
+    try {
+      const parsed = JSON.parse(jsonBox.value);
+      if (!parsed || !Array.isArray(parsed.categories)) {
+        alert("Ongeldig formaat. Verwacht { categories: [...] }");
+        return;
+      }
+      DATA = parsed;
+      saveData(DATA);
+      selected = { catId: null, subId: null, topicId: null };
+      updateEditorVisibility();
+      renderTree();
+      await renderLibrary();
+      showToast("Import gelukt.");
+    } catch {
+      alert("JSON kon niet worden gelezen. Controleer de syntax.");
+    }
+  });
+
+  // Library events
+  libUpload.addEventListener("change", async () => {
+    const file = libUpload.files?.[0];
+    if (!file) return;
+    try {
+      await addFileToLibrary(file);
+      await renderLibrary();
+      showToast("Media toegevoegd aan library.");
+    } catch (e) {
+      alert("Upload mislukt. Mogelijk storage limiet of bestandstype.");
+      console.error(e);
+    } finally {
+      libUpload.value = "";
+    }
+  });
+
+  libFilter.addEventListener("change", renderLibrary);
+  libSearch.addEventListener("input", renderLibrary);
+  refreshLibraryBtn.addEventListener("click", renderLibrary);
+
+  cleanupMissingRefsBtn.addEventListener("click", async () => {
+    // Check: topics die verwijzen naar idb key die niet bestaat
+    const missing = [];
+    for (const cat of DATA.categories) {
+      for (const sub of cat.subcategories) {
+        for (const t of sub.topics) {
+          if (t.media && t.media.source === "idb" && t.media.key) {
+            const rec = await idbGet(t.media.key);
+            if (!rec) missing.push({ cat: cat.name, sub: sub.name, topic: t.title, key: t.media.key });
+          }
+          if (t.podcast && t.podcast.source === "idb" && t.podcast.key) {
+            const rec = await idbGet(t.podcast.key);
+            if (!rec) missing.push({ cat: cat.name, sub: sub.name, topic: `${t.title} (podcast)`, key: t.podcast.key });
+          }
+        }
+      }
+    }
+
+    if (!missing.length) {
+      alert("Geen ontbrekende media-referenties gevonden.");
+      return;
+    }
+
+    const msg = missing.slice(0, 10).map(x => `- ${x.topic} (${x.cat} > ${x.sub}) => ${x.key}`).join("\n");
+    alert(`Ontbrekende media refs gevonden (${missing.length}).\n\nVoorbeeld:\n${msg}`);
+  });
+
+  // =====================================================
+  // Init
+  // =====================================================
+  setAdminTab("content");
+  setStatus(`Laatst gewijzigd: ${DATA?.meta?.updatedAt ? new Date(DATA.meta.updatedAt).toLocaleString() : "-"}`);
+  renderTree();
+  updateEditorVisibility();
+  renderLibrary();
+</script>
+</body>
+</html>
+
+

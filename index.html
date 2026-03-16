@@ -1,0 +1,1177 @@
+﻿<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self' https://cdn.tailwindcss.com https://fonts.googleapis.com https://fonts.gstatic.com;
+  script-src 'self' https://cdn.tailwindcss.com 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' data: https://fonts.gstatic.com;
+  img-src 'self' data: blob: https:;
+  media-src 'self' data: blob: https:;
+  frame-src https://www.youtube.com https://www.youtube-nocookie.com;
+  connect-src 'self';
+  base-uri 'self';
+  form-action 'self';
+  object-src 'none';
+  navigate-to 'self' https://www.youtube.com https://www.youtube-nocookie.com;
+">
+  <title>Support - Kennisbank</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Manrope", "ui-sans-serif", "sans-serif"],
+            display: ["Sora", "ui-sans-serif", "sans-serif"]
+          },
+          colors: {
+            brand: {
+              50: "#fff3f2",
+              100: "#ffe2df",
+              200: "#ffc9c3",
+              300: "#ffa49a",
+              400: "#ff6f62",
+              500: "#f3483a",
+              600: "#dd3023",
+              700: "#b9241b",
+              800: "#991f19",
+              900: "#7f201b"
+            }
+          },
+          boxShadow: {
+            soft: "0 20px 45px -25px rgba(15, 23, 42, 0.35)"
+          },
+          keyframes: {
+            rise: {
+              "0%": { opacity: "0", transform: "translateY(10px)" },
+              "100%": { opacity: "1", transform: "translateY(0)" }
+            }
+          },
+          animation: {
+            rise: "rise .35s ease-out both"
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: "Manrope", ui-sans-serif, sans-serif;
+      background: radial-gradient(circle at 20% 10%, #fee2e2 0%, rgba(254, 226, 226, 0) 45%),
+                  radial-gradient(circle at 85% 15%, #dbeafe 0%, rgba(219, 234, 254, 0) 45%),
+                  linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+    h1, h2, h3, .kb-display { font-family: "Sora", ui-sans-serif, sans-serif; }
+    #sidebar {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 20px 45px -25px rgba(15, 23, 42, 0.45);
+    }
+    #view > * { animation: rise .35s ease-out both; }
+    [data-nav], [data-go], [data-topic], [data-back], [data-contact], #audioBtn, #contactBtn {
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease;
+    }
+    [data-go]:hover, [data-topic]:hover { transform: translateY(-2px); }
+    [data-nav]:hover { transform: translateX(2px); }
+    [data-topic]:focus-visible, [data-go]:focus-visible, [data-nav]:focus-visible {
+      outline: 2px solid #f3483a;
+      outline-offset: 2px;
+    }
+    #nav::-webkit-scrollbar { width: 8px; }
+    #nav::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+  </style>
+</head>
+
+<body class="text-slate-900 antialiased">
+    <div id="topShield" class="fixed top-0 left-0 right-0 h-10 z-[9999] bg-transparent"></div>
+  <div class="min-h-screen flex lg:gap-6 lg:px-4 lg:py-4">
+
+    <!-- Mobile overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black/40 hidden z-40 lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+      class="fixed z-50 inset-y-0 left-0 w-80 border-r border-slate-200/70
+             transform -translate-x-full transition-transform duration-200 ease-out
+             lg:translate-x-0 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:rounded-3xl lg:border lg:border-slate-200/70"
+    >
+      <div class="h-full flex flex-col">
+
+        <!-- Header / Logo -->
+        <div class="px-4 py-4 border-b border-slate-200/70 flex items-center gap-3">
+          <div class="h-11 w-11 rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+            <img src="/ROCM.jpeg" alt="Logo" class="h-full w-full object-cover">
+          </div>
+          <div class="min-w-0">
+            <div class="kb-display font-semibold text-slate-900 leading-tight">ROC Mondriaan ICT Portaal</div>
+            <div id="liveMeta" class="text-xs text-slate-500 truncate">Laden...</div>
+          </div>
+
+          <button id="closeSidebar"
+            class="ml-auto lg:hidden inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100"
+            aria-label="Sluit sidebar"
+          >
+            <svg class="w-5 h-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Nav -->
+        <div class="flex-1 min-h-0 overflow-auto px-3 py-3">
+          <nav id="nav" class="space-y-4"></nav>
+        </div>
+
+        <!-- Sticky bottom buttons -->
+        <div class="sticky bottom-0 bg-white/85 backdrop-blur border-t border-slate-200/70 p-4">
+          <button id="audioBtn"
+            class="mb-2 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm shadow-[0_0_14px_rgba(243,72,58,0.16)] hover:border-brand-200 hover:bg-brand-50/50 hover:shadow-[0_0_18px_rgba(243,72,58,0.24)] focus:outline-none focus:ring-2 focus:ring-slate-300"
+            type="button"
+          >
+            Audioversies / Podcast Uitleg
+          </button>
+          <button id="contactBtn"
+            class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-soft hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            type="button"
+          >
+            Mijn vraag staat er niet tussen
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 pt-1 lg:pt-0">
+      <header class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-slate-200/70 lg:rounded-2xl">
+        <div class="px-4 py-3 flex items-center gap-3">
+          <button id="openSidebar"
+            class="lg:hidden inline-flex items-center justify-center rounded-xl p-2 hover:bg-slate-100"
+            aria-label="Open sidebar"
+          >
+            <svg class="w-6 h-6 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          <div class="min-w-0 flex-1">
+            <div class="kb-display font-semibold text-slate-900">Kennisbank</div>
+            <div id="breadcrumb" class="text-sm text-slate-600 truncate">Kies een categorie</div>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-4 sm:p-6">
+        <div class="max-w-6xl" id="view"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden max-w-sm rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-soft">
+    <div id="toastText" class="text-sm"></div>
+  </div>
+
+<script>
+    // Extra blokkades voor selectie/drag/copy
+document.addEventListener("selectstart", (e) => e.preventDefault());
+document.addEventListener("dragstart", (e) => e.preventDefault());
+
+// Optioneel: copy/cut ook blokkeren
+document.addEventListener("copy", (e) => e.preventDefault());
+document.addEventListener("cut", (e) => e.preventDefault());
+
+
+  // =====================================================
+  // IndexedDB Media Store (same as admin)
+  // =====================================================
+  const MEDIA_DB = "kb_media_v1";
+  const MEDIA_STORE = "files";
+
+  function idbOpen() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(MEDIA_DB, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(MEDIA_STORE)) db.createObjectStore(MEDIA_STORE);
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbGet(key) {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(MEDIA_STORE, "readonly");
+      const req = tx.objectStore(MEDIA_STORE).get(key);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async function idbList() {
+    const db = await idbOpen();
+    return new Promise((resolve, reject) => {
+      const items = [];
+      const tx = db.transaction(MEDIA_STORE, "readonly");
+      const store = tx.objectStore(MEDIA_STORE);
+      const req = store.openCursor();
+      req.onsuccess = () => {
+        const cur = req.result;
+        if (!cur) return;
+        items.push({ key: cur.key, record: cur.value });
+        cur.continue();
+      };
+      tx.oncomplete = () => resolve(items);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // =====================================================
+  // App
+  // =====================================================
+  const STORAGE_KEY = "kb_data_v1";
+  const bc = ("BroadcastChannel" in window) ? new BroadcastChannel("kb_updates") : null;
+
+  const navEl = document.getElementById("nav");
+  const navSearchEl = document.getElementById("navSearch");
+  const viewEl = document.getElementById("view");
+  const breadcrumbEl = document.getElementById("breadcrumb");
+  const liveMetaEl = document.getElementById("liveMeta");
+
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  const openSidebarBtn = document.getElementById("openSidebar");
+  const closeSidebarBtn = document.getElementById("closeSidebar");
+  const audioBtn = document.getElementById("audioBtn");
+
+  const toastEl = document.getElementById("toast");
+  const toastTextEl = document.getElementById("toastText");
+  let toastTimer = null;
+
+  function showToast(msg) {
+    toastTextEl.textContent = msg;
+    toastEl.classList.remove("hidden");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.add("hidden"), 2200);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[s]));
+  }
+
+  const ISSUE_FEEDBACK_KEY = "kb_issue_feedback_v1";
+  const ISSUE_REASONS = [
+    { id: "unclear", label: "Antwoorden zijn onduidelijk" },
+    { id: "missing", label: "Antwoord staat er niet tussen" },
+    { id: "wrong", label: "Antwoord lost het probleem niet op" },
+    { id: "video", label: "Video-uitleg helpt niet genoeg" },
+    { id: "other", label: "Anders" }
+  ];
+
+  function loadIssueFeedbackStore() {
+    const fallback = { counts: {}, last: null };
+    const raw = localStorage.getItem(ISSUE_FEEDBACK_KEY);
+    if (!raw) return fallback;
+    try {
+      const parsed = JSON.parse(raw);
+      return {
+        counts: (parsed && typeof parsed.counts === "object" && parsed.counts) ? parsed.counts : {},
+        last: (parsed && parsed.last) ? parsed.last : null
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  function saveIssueFeedbackStore(store) {
+    localStorage.setItem(ISSUE_FEEDBACK_KEY, JSON.stringify(store));
+  }
+
+  function submitIssueFeedback(reasonId, label) {
+    const store = loadIssueFeedbackStore();
+    const next = Math.max(0, Number(store.counts?.[reasonId] || 0)) + 1;
+    store.counts = store.counts || {};
+    store.counts[reasonId] = next;
+    store.last = {
+      reasonId,
+      label,
+      at: new Date().toISOString()
+    };
+    saveIssueFeedbackStore(store);
+    return store;
+  }
+
+  function loadData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    let data = { meta: { updatedAt: null }, categories: [] };
+    let needsPersist = false;
+
+    if (!raw) {
+      needsPersist = true;
+    } else {
+      try {
+        data = JSON.parse(raw);
+      } catch {
+        data = { meta: { updatedAt: null }, categories: [] };
+        needsPersist = true;
+      }
+    }
+
+    data.meta = data.meta || {};
+    if (!Array.isArray(data.categories)) {
+      data.categories = [];
+      needsPersist = true;
+    }
+
+    if (needsPersist) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    return data;
+  }
+
+  function getYouTubeId(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "") || null;
+      if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+    } catch {}
+    return null;
+  }
+
+  let DATA = loadData();
+
+  function setLiveMeta() {
+    const at = DATA?.meta?.updatedAt;
+    liveMetaEl.textContent = at
+      ? `Laatst bijgewerkt: ${new Date(at).toLocaleString()}`
+      : "Nog geen content";
+  }
+
+  // ObjectURL cleanup for IDB media
+  let activeObjectUrls = [];
+  function revokeActiveObjectUrls() {
+    for (const u of activeObjectUrls) URL.revokeObjectURL(u);
+    activeObjectUrls = [];
+  }
+
+  async function hydrateIdbMedia() {
+    const nodes = viewEl.querySelectorAll("[data-idb-media]");
+    for (const el of nodes) {
+      const key = el.getAttribute("data-idb-media");
+      const type = el.getAttribute("data-idb-type");
+      if (!key || !type) continue;
+
+      const rec = await idbGet(key);
+      if (!rec || !rec.blob) continue;
+
+      const url = URL.createObjectURL(rec.blob);
+      activeObjectUrls.push(url);
+
+      if (type === "image") el.src = url;
+      if (type === "video") el.src = url;
+      if (type === "audio") el.src = url;
+    }
+  }
+
+  // #/catId/subId/topicId     => solution
+  // #/feedback or #/contact   => feedback
+  // #/audio or #/podcast      => audiopage
+  function parseRoute() {
+    const hash = (location.hash || "#/").replace(/^#/, "");
+    const parts = hash.split("/").filter(Boolean);
+
+    if (parts.length === 0) return { view: "home" };
+    if (parts[0] === "feedback" || parts[0] === "contact") return { view: "feedback" };
+    if (parts[0] === "audio" || parts[0] === "podcast") return { view: "audio" };
+
+    const catId = parts[0];
+    const subId = parts[1];
+    const topicId = parts[2];
+
+    if (catId && subId && topicId) return { view: "topic", catId, subId, topicId };
+    if (catId && subId) return { view: "tiles", catId, subId };
+
+    return { view: "home" };
+  }
+  function go(path) { location.hash = path; }
+  function getActiveSidebarState() {
+    const r = parseRoute();
+    if (r.view === "tiles" || r.view === "topic") return { catId: r.catId, subId: r.subId };
+    return null;
+  }
+
+  function findCategory(catId) { return DATA.categories.find(c => c.id === catId); }
+  function findSub(catId, subId) {
+    const c = findCategory(catId);
+    if (!c) return null;
+    return c.subcategories.find(s => s.id === subId);
+  }
+  function findTopic(catId, subId, topicId) {
+    const s = findSub(catId, subId);
+    if (!s) return null;
+    return s.topics.find(t => t.id === topicId);
+  }
+
+  // Sidebar
+  function renderSidebar(active) {
+    const query = (navSearchEl?.value || "").trim().toLowerCase();
+    const visibleCategories = DATA.categories
+      .map(cat => {
+        const subs = (cat.subcategories || []).filter(sub => {
+          if (!query) return true;
+          const subMatch = (sub.name || "").toLowerCase().includes(query);
+          const topicMatch = (sub.topics || []).some(t =>
+            (t.title || "").toLowerCase().includes(query) ||
+            (t.summary || "").toLowerCase().includes(query)
+          );
+          return subMatch || topicMatch;
+        });
+        const catMatch = (cat.name || "").toLowerCase().includes(query);
+        const showCategory = !query || catMatch || subs.length > 0;
+        return { cat, subcategories: subs, showCategory };
+      })
+      .filter(item => item.showCategory);
+
+    if (!visibleCategories.length) {
+      const msg = query
+        ? `Geen resultaten voor <span class="font-semibold">${escapeHtml(query)}</span>.`
+        : "Nog geen categorieen beschikbaar.";
+      navEl.innerHTML = `
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-slate-600">
+          ${msg}
+        </div>
+      `;
+      return;
+    }
+
+    navEl.innerHTML = visibleCategories.map(({ cat, subcategories }) => {
+      const isActiveCat = active?.catId === cat.id;
+      return `
+        <section class="space-y-2">
+          <div class="px-1">
+            <div class="text-[11px] font-bold tracking-wider text-slate-500 uppercase">${escapeHtml(cat.name)}</div>
+          </div>
+          <div class="space-y-1.5">
+            ${subcategories.length ? subcategories.map(sub => {
+              const isActiveSub = isActiveCat && active?.subId === sub.id;
+              return `
+                <button
+                  type="button"
+                  data-nav="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}"
+                  class="w-full text-left px-3 py-2.5 rounded-xl text-sm border font-semibold shadow-sm
+                    ${isActiveSub
+                      ? "bg-slate-900 text-white border-slate-900 shadow-soft"
+                      : "bg-white/80 text-slate-700 border-slate-200 hover:border-brand-200 hover:bg-brand-50/60"
+                    }"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="truncate">${escapeHtml(sub.name)}</span>
+                    <span class="text-xs ${isActiveSub ? "text-white/80" : "text-slate-400"}">
+                      ${sub.topics.length}
+                    </span>
+                  </div>
+                </button>
+              `;
+            }).join("") : `
+              <div class="rounded-xl border border-dashed border-slate-300 bg-white/70 px-3 py-2 text-xs text-slate-500">
+                Nog geen subcategorieen.
+              </div>
+            `}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    navEl.querySelectorAll("[data-nav]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId] = btn.getAttribute("data-nav").split("::");
+        go(`#/` + catId + `/` + subId);
+        closeSidebarMobile();
+      });
+    });
+  }
+
+  // Views
+  function renderHome() {
+    breadcrumbEl.textContent = "Kies een categorie";
+    renderSidebar(null);
+    const totalCategories = DATA.categories.length;
+    const totalSubcategories = DATA.categories.reduce((sum, cat) => sum + (cat.subcategories?.length || 0), 0);
+    const totalTopics = DATA.categories.reduce((sum, cat) =>
+      sum + (cat.subcategories || []).reduce((inner, sub) => inner + (sub.topics?.length || 0), 0), 0);
+
+    viewEl.innerHTML = `
+      <section class="rounded-3xl border border-slate-200/80 bg-white/85 backdrop-blur p-6 shadow-soft">
+        <div class="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+              Start hier
+            </div>
+            <h1 class="kb-display mt-3 text-3xl font-semibold text-slate-900">Waar kunnen we je mee helpen?</h1>
+            <p class="mt-3 text-slate-700 max-w-2xl">
+              Kies links een subcategorie. Je ziet daarna direct de juiste oplossingen met stappen en uitlegvideo.
+            </p>
+            <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                <div class="text-xs text-slate-500">Categorieen</div>
+                <div class="mt-1 text-xl font-extrabold text-slate-900">${totalCategories}</div>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                <div class="text-xs text-slate-500">Subcategorieen</div>
+                <div class="mt-1 text-xl font-extrabold text-slate-900">${totalSubcategories}</div>
+              </div>
+              <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                <div class="text-xs text-slate-500">Oplossingen</div>
+                <div class="mt-1 text-xl font-extrabold text-slate-900">${totalTopics}</div>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-700 p-5 text-slate-100">
+            <div class="text-xs uppercase tracking-wider text-slate-300">Tip</div>
+            <p class="mt-3 text-sm leading-relaxed">
+              Gebruik het zoekveld links om direct naar een subcategorie of oplossing te springen.
+            </p>
+            <div class="mt-4 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+              Minder klikken, sneller geholpen
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 grid sm:grid-cols-2 gap-4">
+          ${DATA.categories.map(cat => `
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="text-xs text-slate-500 uppercase font-semibold tracking-wider">${escapeHtml(cat.name)}</div>
+                <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                  ${cat.subcategories.length}
+                </span>
+              </div>
+              <div class="mt-3 grid gap-2">
+                ${cat.subcategories.slice(0,3).map(sub => `
+                  <button
+                    class="text-left rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-3 hover:border-brand-200 hover:bg-brand-50/60"
+                    data-go="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}"
+                    type="button"
+                  >
+                    <div class="font-medium text-slate-900">${escapeHtml(sub.name)}</div>
+                    <div class="text-xs text-slate-500">${sub.topics.length} oplossing(en)</div>
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+    `;
+
+    viewEl.querySelectorAll("[data-go]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId] = btn.getAttribute("data-go").split("::");
+        go(`#/` + catId + `/` + subId);
+      });
+    });
+  }
+
+  function renderTiles(catId, subId) {
+    const cat = findCategory(catId);
+    const sub = findSub(catId, subId);
+    if (!cat || !sub) return renderHome();
+
+    breadcrumbEl.textContent = `${cat.name} - ${sub.name}`;
+    renderSidebar({ catId, subId });
+
+    viewEl.innerHTML = `
+      <section class="rounded-3xl border border-slate-200/80 bg-white/85 backdrop-blur p-6 shadow-soft">
+        <div class="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div class="text-xs uppercase tracking-wider text-slate-500">${escapeHtml(cat.name)}</div>
+            <h1 class="kb-display mt-1 text-3xl font-semibold text-slate-900">${escapeHtml(sub.name)}</h1>
+            <p class="mt-2 text-slate-700">Kies een oplossing hieronder.</p>
+          </div>
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            ${sub.topics.length} oplossing(en)
+          </div>
+        </div>
+
+        <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        ${sub.topics.map(t => {
+          const hasMedia = !!(t.media && (t.media.value || t.media.key));
+          const hasPodcast = !!(t.podcast && (t.podcast.value || t.podcast.key));
+          const hasAnyMedia = hasMedia || hasPodcast;
+          const mediaBadge = t.media?.type === "audio"
+            ? "Audio"
+            : t.media?.type === "image"
+              ? "Foto"
+              : "Video";
+          const badgeText = hasMedia && hasPodcast
+            ? `${mediaBadge} + Podcast`
+            : hasPodcast
+              ? "Podcast"
+              : mediaBadge;
+          return `
+            <button
+              type="button"
+              data-topic="${escapeHtml(t.id)}"
+                class="group text-left rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:border-brand-200 hover:bg-brand-50/40"
+            >
+              <div class="flex items-center justify-between gap-2">
+                  <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Oplossing</div>
+                ${hasAnyMedia ? `<span class="text-[11px] rounded-full bg-brand-50 px-2 py-0.5 text-brand-700 border border-brand-100">${escapeHtml(badgeText)}</span>` : ``}
+              </div>
+                <div class="mt-2 kb-display text-lg font-semibold text-slate-900">${escapeHtml(t.title)}</div>
+              <div class="mt-2 text-sm text-slate-600">${escapeHtml(t.summary || "")}</div>
+                <div class="mt-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-semibold text-slate-700 group-hover:border-brand-200 group-hover:text-brand-700">
+                Bekijk oplossing <span aria-hidden="true">&rarr;</span>
+              </div>
+            </button>
+          `;
+        }).join("")}
+        </div>
+      </section>
+    `;
+
+    viewEl.querySelectorAll("[data-topic]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        go(`#/` + catId + `/` + subId + `/` + btn.getAttribute("data-topic"));
+      });
+    });
+  }
+
+  async function renderTopic(catId, subId, topicId) {
+    const cat = findCategory(catId);
+    const sub = findSub(catId, subId);
+    const t = findTopic(catId, subId, topicId);
+    if (!cat || !sub || !t) return renderTiles(catId, subId);
+
+    breadcrumbEl.textContent = `${cat.name} - ${sub.name} - ${t.title}`;
+    renderSidebar({ catId, subId });
+
+    const mediaHtml = (() => {
+      const m = t.media;
+      if (!m || !m.type) return "";
+
+      const caption = m.caption
+        ? `<div class="mt-2 text-sm text-slate-600">${escapeHtml(m.caption)}</div>`
+        : "";
+
+      // IDB
+      if (m.source === "idb" && m.key) {
+        if (m.type === "image") {
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Afbeelding</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <img data-idb-media="${escapeHtml(m.key)}" data-idb-type="image"
+                     alt="" class="w-full max-h-[420px] object-contain rounded-xl bg-slate-50" />
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+        if (m.type === "video") {
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Video uitleg</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <video data-idb-media="${escapeHtml(m.key)}" data-idb-type="video"
+                       controls class="w-full rounded-xl bg-black"></video>
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+        if (m.type === "audio") {
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Audio uitleg</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <audio data-idb-media="${escapeHtml(m.key)}" data-idb-type="audio"
+                       controls class="w-full rounded-xl bg-white"></audio>
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // URL
+      if (m.source === "url" && m.value) {
+        if (m.type === "image") {
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Afbeelding</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <img src="${escapeHtml(m.value)}" alt="" class="w-full max-h-[420px] object-contain rounded-xl bg-slate-50" />
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+
+        if (m.type === "video") {
+          const yt = getYouTubeId(m.value);
+          if (yt) {
+            return `
+              <div class="mt-6">
+                <div class="text-sm font-semibold text-slate-900">Video</div>
+                <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                  <div class="aspect-video w-full overflow-hidden rounded-xl bg-black">
+                    <iframe class="w-full h-full"
+                      src="https://www.youtube.com/embed/${escapeHtml(yt)}"
+                      title="YouTube video" frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen></iframe>
+                  </div>
+                  ${caption}
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Video</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <video controls class="w-full rounded-xl bg-black" src="${escapeHtml(m.value)}"></video>
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+
+        if (m.type === "audio") {
+          return `
+            <div class="mt-6">
+              <div class="text-sm font-semibold text-slate-900">Audio</div>
+              <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+                <audio controls class="w-full rounded-xl bg-white" src="${escapeHtml(m.value)}"></audio>
+                ${caption}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      return "";
+    })();
+
+    const podcastHtml = (() => {
+      const p = t.podcast;
+      if (!p || (!p.value && !p.key)) return "";
+
+      const caption = p.caption
+        ? `<div class="mt-2 text-sm text-slate-600">${escapeHtml(p.caption)}</div>`
+        : "";
+
+      if (p.source === "idb" && p.key) {
+        return `
+          <div class="mt-6">
+            <div class="text-sm font-semibold text-slate-900">Podcast uitleg</div>
+            <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+              <audio data-idb-media="${escapeHtml(p.key)}" data-idb-type="audio"
+                     controls class="w-full rounded-xl bg-white"></audio>
+              ${caption}
+            </div>
+          </div>
+        `;
+      }
+
+      if (p.source === "url" && p.value) {
+        return `
+          <div class="mt-6">
+            <div class="text-sm font-semibold text-slate-900">Podcast uitleg</div>
+            <div class="mt-2 rounded-2xl border border-slate-200 bg-white p-3">
+              <audio controls class="w-full rounded-xl bg-white" src="${escapeHtml(p.value)}"></audio>
+              ${caption}
+            </div>
+          </div>
+        `;
+      }
+
+      return "";
+    })();
+
+    viewEl.innerHTML = `
+      <section class="rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur p-6 shadow-soft">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <button
+            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60"
+            type="button"
+            data-back="1"
+          >
+            &larr; Terug naar oplossingen
+          </button>
+
+          <button
+            class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800"
+            type="button"
+            data-contact="1"
+          >
+            Ik kom er niet uit
+          </button>
+        </div>
+
+        <h1 class="kb-display mt-5 text-3xl font-semibold text-slate-900">${escapeHtml(t.title)}</h1>
+        <p class="mt-3 text-slate-700 leading-relaxed">${escapeHtml(t.body || "")}</p>
+
+        ${t.tip ? `
+          <div class="mt-6 rounded-2xl border-2 border-red-400 bg-red-50 p-4 text-red-900 shadow-sm">
+            <div class="text-xs font-semibold uppercase tracking-wider">Tip</div>
+            <div class="mt-1">${escapeHtml(t.tip)}</div>
+          </div>
+        ` : ""}
+
+        ${t.steps?.length ? `
+          <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="text-sm font-semibold text-slate-900">Stappenplan</div>
+            <ol class="mt-2 list-decimal pl-5 space-y-2 text-slate-700">
+              ${t.steps.map(s => `<li>${escapeHtml(s)}</li>`).join("")}
+            </ol>
+          </div>
+        ` : ""}
+
+        ${mediaHtml}
+        ${podcastHtml}
+      </section>
+    `;
+
+    viewEl.querySelector("[data-back]").addEventListener("click", () => go(`#/` + catId + `/` + subId));
+    viewEl.querySelector("[data-contact]").addEventListener("click", () => go("#/feedback"));
+
+    // hydrate IDB media
+    revokeActiveObjectUrls();
+    await hydrateIdbMedia();
+  }
+
+  async function renderAudioPage() {
+    breadcrumbEl.textContent = "Audioversies / Podcast Uitleg";
+    renderSidebar(null);
+
+    const items = [];
+    const linkedAudioKeys = new Set();
+    for (const cat of DATA.categories) {
+      for (const sub of (cat.subcategories || [])) {
+        for (const topic of (sub.topics || [])) {
+          const media = topic.media;
+          const podcast = topic.podcast;
+          const hasPodcast = !!(podcast && (podcast.value || podcast.key));
+          const hasPlayableMedia = !!(media && (media.type === "video" || media.type === "audio") && (media.value || media.key));
+          if (!hasPlayableMedia && !hasPodcast) continue;
+
+          const source = (podcast && (podcast.value || podcast.key))
+            ? { ...podcast, type: "audio", kind: "podcast" }
+            : (media && (media.value || media.key) ? { ...media, kind: "media" } : null);
+          if (source?.source === "idb" && source?.type === "audio" && source?.key) {
+            linkedAudioKeys.add(String(source.key));
+          }
+
+          items.push({ cat, sub, topic, media, podcast });
+        }
+      }
+    }
+
+    let loosePodcasts = [];
+    try {
+      const allMedia = await idbList();
+      loosePodcasts = allMedia
+        .filter(({ record }) => record?.type === "audio")
+        .filter(({ key }) => !linkedAudioKeys.has(String(key)))
+        .sort((a, b) => {
+          const da = a.record?.createdAt ? Date.parse(a.record.createdAt) : 0;
+          const db = b.record?.createdAt ? Date.parse(b.record.createdAt) : 0;
+          return db - da;
+        });
+    } catch {}
+
+    const hasAnyAudio = items.length > 0 || loosePodcasts.length > 0;
+
+    viewEl.innerHTML = `
+      <section class="rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur p-6 shadow-soft">
+        <div class="inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">
+          Luisterversies
+        </div>
+        <h1 class="kb-display mt-3 text-3xl font-semibold text-slate-900">Audioversies / Podcast Uitleg</h1>
+        <p class="mt-3 text-slate-700 max-w-2xl">
+          Hieronder vind je gekoppelde audioversies per oplossing en losse podcasts die in admin zijn geupload.
+        </p>
+
+        ${items.length ? `
+          <div class="mt-6 text-xs font-semibold uppercase tracking-wider text-slate-500">Gekoppeld aan oplossingen</div>
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+            ${items.map(({ cat, sub, topic, media, podcast }) => {
+              let audioBlock = `
+                <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  Open de oplossing om de uitleg te beluisteren.
+                </div>
+              `;
+
+              const source = (podcast && (podcast.value || podcast.key))
+                ? { ...podcast, type: "audio", kind: "podcast" }
+                : (media && (media.value || media.key) ? { ...media, kind: "media" } : null);
+
+              if (source?.source === "url" && source.value) {
+                if (source.type === "audio") {
+                  audioBlock = `
+                    <audio controls preload="none" controlslist="nodownload noplaybackrate noremoteplayback" disableremoteplayback
+                      oncontextmenu="return false;" class="w-full rounded-lg border border-slate-200 bg-white" src="${escapeHtml(source.value)}"></audio>
+                  `;
+                } else {
+                  const yt = getYouTubeId(source.value);
+                  if (!yt) {
+                    audioBlock = `
+                      <audio controls preload="none" controlslist="nodownload noplaybackrate noremoteplayback" disableremoteplayback
+                        oncontextmenu="return false;" class="w-full rounded-lg border border-slate-200 bg-white" src="${escapeHtml(source.value)}"></audio>
+                    `;
+                  }
+                }
+              } else if (source?.source === "idb" && source.key) {
+                audioBlock = `
+                  <audio controls preload="none" controlslist="nodownload noplaybackrate noremoteplayback" disableremoteplayback
+                    oncontextmenu="return false;" class="w-full rounded-lg border border-slate-200 bg-white"
+                    data-idb-media="${escapeHtml(source.key)}" data-idb-type="audio"></audio>
+                `;
+              }
+
+              return `
+                <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">${escapeHtml(cat.name)} - ${escapeHtml(sub.name)}</div>
+                  <div class="mt-1 kb-display text-lg font-semibold text-slate-900">${escapeHtml(topic.title)}</div>
+                  <div class="mt-2 text-sm text-slate-600">${escapeHtml(topic.summary || "Geen samenvatting beschikbaar.")}</div>
+                  <div class="mt-3">${audioBlock}</div>
+                  <div class="mt-3">
+                    <button
+                      type="button"
+                      data-open-topic="${escapeHtml(cat.id)}::${escapeHtml(sub.id)}::${escapeHtml(topic.id)}"
+                      class="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-brand-200 hover:bg-brand-50/60"
+                    >
+                      Open oplossing &rarr;
+                    </button>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+        ` : ``}
+
+        ${loosePodcasts.length ? `
+          <div class="mt-8 text-xs font-semibold uppercase tracking-wider text-slate-500">Losse podcasts uit admin</div>
+          <div class="mt-3 grid gap-4 sm:grid-cols-2">
+            ${loosePodcasts.map(({ key, record }) => `
+              <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Podcast upload</div>
+                <div class="mt-1 kb-display text-lg font-semibold text-slate-900">${escapeHtml(record?.name || `podcast-${key}`)}</div>
+                <div class="mt-2 text-xs text-slate-500">
+                  ${record?.createdAt ? escapeHtml(new Date(record.createdAt).toLocaleString()) : "Onbekende datum"}
+                </div>
+                <div class="mt-3">
+                  <audio controls preload="none" controlslist="nodownload noplaybackrate noremoteplayback" disableremoteplayback
+                    oncontextmenu="return false;" class="w-full rounded-lg border border-slate-200 bg-white"
+                    data-idb-media="${escapeHtml(String(key))}" data-idb-type="audio"></audio>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        ` : ``}
+
+        ${!hasAnyAudio ? `
+          <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-slate-600">
+            Er zijn nog geen oplossingen met audio of video beschikbaar voor audioversies.
+          </div>
+        ` : ``}
+
+        <div class="mt-6">
+          <button
+            type="button"
+            data-home="1"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Terug naar start
+          </button>
+        </div>
+      </section>
+    `;
+
+    viewEl.querySelectorAll("[data-open-topic]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const [catId, subId, topicId] = btn.getAttribute("data-open-topic").split("::");
+        go(`#/` + catId + `/` + subId + `/` + topicId);
+        closeSidebarMobile();
+      });
+    });
+
+    const homeBtn = viewEl.querySelector("[data-home]");
+    if (homeBtn) homeBtn.addEventListener("click", () => go("#/"));
+
+    viewEl.querySelectorAll("audio").forEach(el => {
+      el.controlsList = "nodownload noplaybackrate noremoteplayback";
+      el.setAttribute("disableremoteplayback", "");
+      el.addEventListener("contextmenu", (e) => e.preventDefault());
+    });
+
+    revokeActiveObjectUrls();
+    await hydrateIdbMedia();
+  }
+
+  function renderFeedback() {
+    breadcrumbEl.textContent = "Feedback";
+    renderSidebar(null);
+
+    const store = loadIssueFeedbackStore();
+    const lastLabel = store.last?.label ? escapeHtml(store.last.label) : "";
+    const lastAt = store.last?.at ? new Date(store.last.at).toLocaleString() : "";
+
+    viewEl.innerHTML = `
+      <section class="rounded-3xl border border-slate-200/80 bg-white/90 backdrop-blur p-6 shadow-soft">
+        <div class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+          Feedback
+        </div>
+        <h1 class="kb-display mt-3 text-3xl font-semibold text-slate-900">Wat kunnen we verbeteren?</h1>
+        <p class="mt-3 text-slate-700 max-w-2xl">
+          Kies de reden die het beste past. Zo verbeteren we de kennisbank gericht.
+        </p>
+
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          ${ISSUE_REASONS.map(reason => {
+            return `
+              <button
+                type="button"
+                data-feedback-reason="${escapeHtml(reason.id)}"
+                data-feedback-label="${escapeHtml(reason.label)}"
+                class="text-left rounded-xl border border-slate-200 bg-white px-4 py-3 hover:border-slate-300 hover:bg-slate-50"
+              >
+                <div class="font-semibold text-slate-900">${escapeHtml(reason.label)}</div>
+              </button>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700" data-feedback-result>
+          ${lastLabel ? `Laatste feedback: <strong>${lastLabel}</strong> (${escapeHtml(lastAt)})` : "Nog geen feedback gekozen."}
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-home="1"
+            class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Terug naar start
+          </button>
+        </div>
+      </section>
+    `;
+
+    viewEl.querySelectorAll("[data-feedback-reason]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const reasonId = btn.getAttribute("data-feedback-reason");
+        const label = btn.getAttribute("data-feedback-label");
+        if (!reasonId || !label) return;
+        submitIssueFeedback(reasonId, label);
+        showToast("Feedback opgeslagen. Bedankt.");
+        renderFeedback();
+      });
+    });
+
+    const homeBtn = viewEl.querySelector("[data-home]");
+    if (homeBtn) homeBtn.addEventListener("click", () => go("#/"));
+  }
+
+  async function render() {
+    DATA = loadData();
+    setLiveMeta();
+
+    const r = parseRoute();
+    if (r.view === "home") return renderHome();
+    if (r.view === "tiles") return renderTiles(r.catId, r.subId);
+    if (r.view === "topic") return renderTopic(r.catId, r.subId, r.topicId);
+    if (r.view === "audio") return renderAudioPage();
+    if (r.view === "feedback") return renderFeedback();
+    renderHome();
+  }
+
+  // Live update listeners
+  let lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY) {
+      lastDataSnapshot = e.newValue || "";
+      showToast("Content bijgewerkt.");
+      render();
+    }
+  });
+
+  if (bc) {
+    bc.addEventListener("message", (msg) => {
+      if (msg?.data?.type === "updated") {
+        lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
+        showToast("Content bijgewerkt.");
+        render();
+      }
+    });
+  }
+
+  // Fallback voor kiosk-situaties waarin storage/broadcast events niet altijd doorkomen.
+  setInterval(() => {
+    const snap = localStorage.getItem(STORAGE_KEY) || "";
+    if (snap !== lastDataSnapshot) {
+      lastDataSnapshot = snap;
+      render();
+    }
+  }, 2000);
+
+  // Mobile sidebar controls
+  function openSidebarMobile() {
+    sidebar.classList.remove("-translate-x-full");
+    overlay.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+  }
+  function closeSidebarMobile() {
+    sidebar.classList.add("-translate-x-full");
+    overlay.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  openSidebarBtn.addEventListener("click", openSidebarMobile);
+  closeSidebarBtn.addEventListener("click", closeSidebarMobile);
+  overlay.addEventListener("click", closeSidebarMobile);
+  if (navSearchEl) {
+    navSearchEl.addEventListener("input", () => {
+      renderSidebar(getActiveSidebarState());
+    });
+  }
+
+  if (audioBtn) {
+    audioBtn.addEventListener("click", () => {
+      go("#/audio");
+      closeSidebarMobile();
+    });
+  }
+
+  document.getElementById("contactBtn").addEventListener("click", () => {
+    go("#/feedback");
+    closeSidebarMobile();
+  });
+
+  window.addEventListener("hashchange", async () => {
+    revokeActiveObjectUrls();
+    await render();
+  });
+
+  // Init
+  if (!location.hash) location.hash = "#/";
+  render();
+</script>
+</body>
+</html>
