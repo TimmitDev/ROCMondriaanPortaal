@@ -67,6 +67,10 @@
       background: radial-gradient(circle at 20% 10%, #fee2e2 0%, rgba(254, 226, 226, 0) 45%),
                   radial-gradient(circle at 85% 15%, #dbeafe 0%, rgba(219, 234, 254, 0) 45%),
                   linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+      user-select: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      -webkit-touch-callout: none;
     }
     h1, h2, h3, .kb-display { font-family: "Sora", ui-sans-serif, sans-serif; }
     #sidebar {
@@ -179,13 +183,21 @@
   </div>
 
 <script>
-    // Extra blokkades voor selectie/drag/copy
-document.addEventListener("selectstart", (e) => e.preventDefault());
-document.addEventListener("dragstart", (e) => e.preventDefault());
-
-// Optioneel: copy/cut ook blokkeren
-document.addEventListener("copy", (e) => e.preventDefault());
-document.addEventListener("cut", (e) => e.preventDefault());
+  // Extra blokkades voor contextmenu/selection/copy
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+  document.addEventListener("selectstart", (e) => e.preventDefault());
+  document.addEventListener("dragstart", (e) => e.preventDefault());
+  document.addEventListener("copy", (e) => e.preventDefault());
+  document.addEventListener("cut", (e) => e.preventDefault());
+  document.addEventListener("keydown", (e) => {
+    const key = e.key.toLowerCase();
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+    const isDevtoolsShortcut =
+      key === "f12" ||
+      (ctrlOrCmd && e.shiftKey && (key === "i" || key === "j" || key === "c")) ||
+      (ctrlOrCmd && (key === "u" || key === "s" || key === "p" || key === "a" || key === "c" || key === "x"));
+    if (isDevtoolsShortcut) e.preventDefault();
+  });
 
 
   // =====================================================
