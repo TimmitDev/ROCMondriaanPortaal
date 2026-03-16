@@ -432,7 +432,7 @@
               </div>
 
               <div class="text-xs text-slate-500">
-                Tip: export eerst als backup voordat je importeert.
+                Tip: export eerst als backup voordat je importeert. Voor data op alle apparaten: kopieer de export naar <code>kb-data.json</code> in de repo en push naar GitHub.
               </div>
             </div>
           </div>
@@ -593,6 +593,7 @@
   // Storage / Live update
   // =====================================================
   const STORAGE_KEY = "kb_data_v1";
+  const REMOTE_DATA_URL = "./kb-data.json";
   const ADMIN_AUTH_KEY = "kb_admin_auth_v1";
   const ISSUE_FEEDBACK_KEY = "kb_issue_feedback_v1";
   const ISSUE_REASON_LABELS = {
@@ -620,6 +621,51 @@
       meta: { updatedAt: nowIso() },
       categories: []
     };
+  }
+
+  function hasCategories(data) {
+    return !!(data && Array.isArray(data.categories) && data.categories.length > 0);
+  }
+
+  function isValidDataShape(data) {
+    return !!(data && typeof data === "object" && Array.isArray(data.categories));
+  }
+
+  async function seedDataFromRepoIfNeeded() {
+    let localData = null;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        localData = JSON.parse(raw);
+      } catch {}
+    }
+
+    try {
+      const res = await fetch(REMOTE_DATA_URL, { cache: "no-store" });
+      if (!res.ok) return false;
+
+      const remoteData = await res.json();
+      if (!isValidDataShape(remoteData) || !hasCategories(remoteData)) return false;
+
+      remoteData.meta = remoteData.meta || {};
+      const hasLocal = isValidDataShape(localData) && hasCategories(localData);
+      if (!hasLocal) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+        return true;
+      }
+
+      const remoteAt = Date.parse(remoteData?.meta?.updatedAt || "");
+      const localAt = Date.parse(localData?.meta?.updatedAt || "");
+      const remoteIsNewer = Number.isFinite(remoteAt) && (!Number.isFinite(localAt) || remoteAt > localAt);
+      if (remoteIsNewer) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   function loadData() {
@@ -655,7 +701,7 @@
   // =====================================================
   // Admin UI state + helpers
   // =====================================================
-  let DATA = loadData();
+  let DATA = defaultData();
   let selected = { catId: null, subId: null, topicId: null };
   // SortableJS instances (destroy/recreate on each tree render)
   let SORTABLES = [];
@@ -2026,11 +2072,17 @@
   // =====================================================
   // Init
   // =====================================================
-  setAdminTab("content");
-  setStatus(`Laatst gewijzigd: ${DATA?.meta?.updatedAt ? new Date(DATA.meta.updatedAt).toLocaleString() : "-"}`);
-  renderTree();
-  updateEditorVisibility();
-  renderLibrary();
+  async function initAdmin() {
+    await seedDataFromRepoIfNeeded();
+    DATA = loadData();
+    setAdminTab("content");
+    setStatus(`Laatst gewijzigd: ${DATA?.meta?.updatedAt ? new Date(DATA.meta.updatedAt).toLocaleString() : "-"}`);
+    renderTree();
+    updateEditorVisibility();
+    await renderLibrary();
+  }
+
+  initAdmin();
 </script>
 </body>
 </html>

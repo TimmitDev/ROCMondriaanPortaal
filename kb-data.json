@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "updatedAt": "2026-03-16T08:12:28.705Z"
+  },
+  "categories": [
+    {
+      "id": "algemeen",
+      "name": "Algemeen",
+      "subcategories": [
+        {
+          "id": "authenticator",
+          "name": "Authenticator",
+          "topics": [
+            {
+              "id": "authenticator-resetten",
+              "title": "Zelf je authenticator resetten",
+              "summary": "Authenticator resetten",
+              "body": "Als je geen toegang meer hebt tot je oude telefoon dan moet je de QR code scannen die op de poster staat op de balie. Er wordt een Whatsapp chat geopend op je telefoon, geef hier aan dat je een reset nodig hebt.",
+              "steps": [
+                "Heb je je oude telefoon nog? Volg dan onderstaande video om je nieuwe telefoon toe te voegen."
+              ],
+              "tip": "Je kan je eigen Authenticator alleen resetten als je nog je oude telefoon hebt.",
+              "media": {
+                "type": "video",
+                "source": "url",
+                "value": "./video/authenticator_reset.mp4",
+                "caption": ""
+              }
+            }
+          ]
+        },
+        {
+          "id": "wachtwoord",
+          "name": "Wachtwoord",
+          "topics": [
+            {
+              "id": "wachtwoord-resetten",
+              "title": "Wachtwoord resetten",
+              "summary": "",
+              "body": "",
+              "steps": [],
+              "tip": "Je hebt toegang tot je Authenticator nodig.",
+              "media": {
+                "type": "video",
+                "source": "url",
+                "value": "./video/wachtwoord-reset.mp4",
+                "caption": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "telefoon",
+      "name": "Telefoon",
+      "subcategories": [
+        {
+          "id": "verbinding-maken-met-wifi",
+          "name": "Internet verbinding",
+          "topics": [
+            {
+              "id": "apple-wifi-verbinding",
+              "title": "Apple - Wifi verbinding",
+              "summary": "",
+              "body": "",
+              "steps": [
+                "Verbind met het netwerk: Eduroam",
+                "Vul als gebruikersnaam je schoolmail in (studentennummer@student.rocmondriaan.nl)",
+                "Voer het wachtwoord in van je account.",
+                "Klik hierna op verbinden."
+              ],
+              "tip": "Werkt de verbinding alsnog niet? Klik op het 'i' achter het netwerk en vervolgens op 'Vergeet dit netwerk'. Probeer het hierna opnieuw.",
+              "media": null
+            },
+            {
+              "id": "android-wifi-verbinding",
+              "title": "Android - Wifi verbinding",
+              "summary": "",
+              "body": "",
+              "steps": [],
+              "tip": "",
+              "media": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "laptop",
+      "name": "Laptop",
+      "subcategories": [
+        {
+          "id": "internet",
+          "name": "Internet verbinding",
+          "topics": [
+            {
+              "id": "verbinden-met-eduroam",
+              "title": "Windows - Wifi verbinding",
+              "summary": "Eduroam instellen op je laptop",
+              "body": "Met deze stappen verbind je je laptop met het Eduroam-netwerk.",
+              "steps": [],
+              "tip": "",
+              "media": {
+                "type": "video",
+                "source": "url",
+                "value": "./video/eduroam_laptop.mp4",
+                "caption": "Uitlegvideo voor Eduroam op laptop."
+              }
+            }
+          ]
+        },
+        {
+          "id": "office",
+          "name": "Office pakket ",
+          "topics": [
+            {
+              "id": "office-op-laptop",
+              "title": "Office gebruiken op laptop",
+              "summary": "Inloggen en Office apps starten",
+              "body": "Gebruik deze handleiding om Office op je laptop te openen en te activeren.",
+              "steps": [
+                "Ga naar portal.office.com/account",
+                "Log in met je schoolaccount",
+                "Kies aan de linkerkant voor 'Kantoor installeren'",
+                "Het Office installatieprogramma gaat nu downloaden, open het bestand en de installatie start."
+              ],
+              "tip": "Je kan Office 365 maximaal 5x installeren op een eigen device.",
+              "media": {
+                "type": "video",
+                "source": "url",
+                "value": "./video/office_laptop.mp4",
+                "caption": "Uitlegvideo voor Office op laptop."
+              }
+            }
+          ]
+        },
+        {
+          "id": "printen",
+          "name": "Printen",
+          "topics": [
+            {
+              "id": "printer-doet-het-niet",
+              "title": "Printer doet het niet",
+              "summary": "Printen met schoolaccount",
+              "body": "",
+              "steps": [
+                "Ga op je laptop naar followme.rocmondriaan.nl",
+                "Log hier in met je gebruikersnaam en je wachtwoord",
+                "Voor de volgende stappen, volg onderstaande video."
+              ],
+              "tip": "",
+              "media": {
+                "type": "video",
+                "source": "url",
+                "value": "./video/printer_laptop.mp4",
+                "caption": "Uitlegvideo voor printerproblemen op laptop."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "opleiding",
+      "name": "Overig",
+      "subcategories": [
+        {
+          "id": "leenlaptop-aanvragen",
+          "name": "Leenlaptop aanvragen",
+          "topics": [
+            {
+              "id": "ik-wil-een-leenlaptop",
+              "title": "Ik wil een leenlaptop",
+              "summary": "",
+              "body": "Je kunt een leenlaptop aanvragen bij de administratie van je opleiding.",
+              "steps": [],
+              "tip": "",
+              "media": null
+            }
+          ]
+        },
+        {
+          "id": "rooster",
+          "name": "Rooster",
+          "topics": [
+            {
+              "id": "ik-zie-mijn-rooster-niet",
+              "title": "Ik zie mijn rooster niet",
+              "summary": "",
+              "body": "",
+              "steps": [],
+              "tip": "",
+              "media": null
+            }
+          ]
+        },
+        {
+          "id": "websites-laden-niet",
+          "name": "Websites laden niet",
+          "topics": []
+        }
+      ]
+    }
+  ]
+}

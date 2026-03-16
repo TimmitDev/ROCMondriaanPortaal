@@ -250,6 +250,7 @@
   // App
   // =====================================================
   const STORAGE_KEY = "kb_data_v1";
+  const REMOTE_DATA_URL = "./kb-data.json";
   const bc = ("BroadcastChannel" in window) ? new BroadcastChannel("kb_updates") : null;
 
   const navEl = document.getElementById("nav");
@@ -350,6 +351,51 @@
     }
 
     return data;
+  }
+
+  function hasCategories(data) {
+    return !!(data && Array.isArray(data.categories) && data.categories.length > 0);
+  }
+
+  function isValidDataShape(data) {
+    return !!(data && typeof data === "object" && Array.isArray(data.categories));
+  }
+
+  async function seedDataFromRepoIfNeeded() {
+    let localData = null;
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try {
+        localData = JSON.parse(raw);
+      } catch {}
+    }
+
+    try {
+      const res = await fetch(REMOTE_DATA_URL, { cache: "no-store" });
+      if (!res.ok) return false;
+
+      const remoteData = await res.json();
+      if (!isValidDataShape(remoteData) || !hasCategories(remoteData)) return false;
+
+      remoteData.meta = remoteData.meta || {};
+      const hasLocal = isValidDataShape(localData) && hasCategories(localData);
+      if (!hasLocal) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+        return true;
+      }
+
+      const remoteAt = Date.parse(remoteData?.meta?.updatedAt || "");
+      const localAt = Date.parse(localData?.meta?.updatedAt || "");
+      const remoteIsNewer = Number.isFinite(remoteAt) && (!Number.isFinite(localAt) || remoteAt > localAt);
+      if (remoteIsNewer) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
   }
 
   function getYouTubeId(url) {
@@ -1182,8 +1228,15 @@
   });
 
   // Init
-  if (!location.hash) location.hash = "#/";
-  render();
+  async function initApp() {
+    if (!location.hash) location.hash = "#/";
+    await seedDataFromRepoIfNeeded();
+    DATA = loadData();
+    lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
+    await render();
+  }
+
+  initApp();
 </script>
 </body>
 </html>
