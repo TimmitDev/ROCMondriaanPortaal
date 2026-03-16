@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updatedAt": "2026-03-16T08:12:28.705Z"
+    "updatedAt": "2026-03-16T10:13:51.021Z"
   },
   "categories": [
     {
@@ -194,11 +194,6 @@
               "media": null
             }
           ]
-        },
-        {
-          "id": "websites-laden-niet",
-          "name": "Websites laden niet",
-          "topics": []
         }
       ]
     }
