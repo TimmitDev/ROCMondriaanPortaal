@@ -434,61 +434,6 @@
               <div class="text-xs text-slate-500">
                 Tip: export eerst als backup voordat je importeert. Voor data op alle apparaten: kopieer de export naar <code>kb-data.json</code> in de repo en push naar GitHub.
               </div>
-
-              <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                <div>
-                  <div class="text-sm font-semibold text-slate-900">GitHub Live Sync</div>
-                  <div class="text-xs text-slate-500">
-                    Publiceer wijzigingen uit admin direct naar <code>kb-data.json</code>, zodat alle apparaten dezelfde content krijgen.
-                  </div>
-                </div>
-
-                <div class="grid sm:grid-cols-2 gap-3">
-                  <div>
-                    <label class="text-xs font-semibold text-slate-600">Repo owner</label>
-                    <input id="ghOwner" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="bijv. jouw-gebruikersnaam" />
-                  </div>
-                  <div>
-                    <label class="text-xs font-semibold text-slate-600">Repo naam</label>
-                    <input id="ghRepo" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="bijv. ROCMondriaanPortaal" />
-                  </div>
-                </div>
-
-                <div class="grid sm:grid-cols-3 gap-3">
-                  <div>
-                    <label class="text-xs font-semibold text-slate-600">Branch</label>
-                    <input id="ghBranch" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="main" />
-                  </div>
-                  <div class="sm:col-span-2">
-                    <label class="text-xs font-semibold text-slate-600">Bestandspad</label>
-                    <input id="ghPath" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="kb-data.json" />
-                  </div>
-                </div>
-
-                <div>
-                  <label class="text-xs font-semibold text-slate-600">GitHub token (PAT)</label>
-                  <input id="ghToken" type="password" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" placeholder="Alleen in deze sessie opgeslagen" />
-                  <div class="mt-1 text-[11px] text-slate-500">Gebruik een token met minimaal <strong>Contents: Read and write</strong> rechten.</div>
-                </div>
-
-                <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                  <input id="ghAutoPublish" type="checkbox" class="rounded border-slate-300 text-slate-900 focus:ring-slate-300" />
-                  Automatisch publiceren bij opslaan
-                </label>
-
-                <div class="flex flex-wrap gap-2">
-                  <button id="saveGhConfig"
-                    class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                    type="button"
-                  >Sync instellingen opslaan</button>
-                  <button id="publishNow"
-                    class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-soft hover:bg-slate-800"
-                    type="button"
-                  >Nu publiceren</button>
-                </div>
-
-                <div id="ghSyncStatus" class="text-xs text-slate-500">Nog niet gekoppeld aan GitHub sync.</div>
-              </div>
             </div>
           </div>
 
@@ -650,8 +595,6 @@
   const STORAGE_KEY = "kb_data_v1";
   const REMOTE_DATA_URL = "./kb-data.json";
   const ADMIN_AUTH_KEY = "kb_admin_auth_v1";
-  const GITHUB_SYNC_SETTINGS_KEY = "kb_github_sync_settings_v1";
-  const GITHUB_SYNC_TOKEN_KEY = "kb_github_sync_token_v1";
   const ISSUE_FEEDBACK_KEY = "kb_issue_feedback_v1";
   const ISSUE_REASON_LABELS = {
     unclear: "Antwoorden zijn onduidelijk",
@@ -689,11 +632,11 @@
   }
 
   async function seedDataFromRepoIfNeeded() {
-    let localData = null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
-        localData = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (hasCategories(parsed)) return false;
       } catch {}
     }
 
@@ -706,21 +649,8 @@
       if (!isValidDataShape(remoteData) || !hasCategories(remoteData)) return false;
 
       remoteData.meta = remoteData.meta || {};
-      const hasLocal = isValidDataShape(localData) && hasCategories(localData);
-      if (!hasLocal) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
-        return true;
-      }
-
-      const remoteAt = Date.parse(remoteData?.meta?.updatedAt || "");
-      const localAt = Date.parse(localData?.meta?.updatedAt || "");
-      const remoteIsNewer = Number.isFinite(remoteAt) && (!Number.isFinite(localAt) || remoteAt > localAt);
-      if (remoteIsNewer) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
-        return true;
-      }
-
-      return false;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+      return true;
     } catch {
       return false;
     }
@@ -747,273 +677,6 @@
     }
   }
 
-  function inferGitHubSyncDefaults() {
-    const fallback = { owner: "", repo: "", branch: "main", path: "kb-data.json", autoPublish: false };
-    try {
-      const host = String(location.hostname || "");
-      if (!host.endsWith(".github.io")) return fallback;
-      const owner = host.split(".")[0] || "";
-      const segs = String(location.pathname || "").split("/").filter(Boolean);
-      const repo = segs[0] || `${owner}.github.io`;
-      return { ...fallback, owner, repo };
-    } catch {
-      return fallback;
-    }
-  }
-
-  function normalizeGitHubSyncSettings(raw) {
-    const defaults = inferGitHubSyncDefaults();
-    const source = (raw && typeof raw === "object") ? raw : {};
-    return {
-      owner: String(source.owner ?? defaults.owner).trim(),
-      repo: String(source.repo ?? defaults.repo).trim(),
-      branch: String(source.branch ?? defaults.branch).trim() || "main",
-      path: String(source.path ?? "kb-data.json").trim().replace(/^\/+/, "") || "kb-data.json",
-      autoPublish: !!source.autoPublish
-    };
-  }
-
-  function loadGitHubSyncSettings() {
-    const raw = localStorage.getItem(GITHUB_SYNC_SETTINGS_KEY);
-    if (!raw) return normalizeGitHubSyncSettings({});
-    try {
-      return normalizeGitHubSyncSettings(JSON.parse(raw));
-    } catch {
-      return normalizeGitHubSyncSettings({});
-    }
-  }
-
-  function saveGitHubSyncSettings(settings) {
-    localStorage.setItem(GITHUB_SYNC_SETTINGS_KEY, JSON.stringify(normalizeGitHubSyncSettings(settings)));
-  }
-
-  function getGitHubSyncToken() {
-    return String(sessionStorage.getItem(GITHUB_SYNC_TOKEN_KEY) || "").trim();
-  }
-
-  function setGitHubSyncToken(token) {
-    const safeToken = String(token || "").trim();
-    if (!safeToken) {
-      sessionStorage.removeItem(GITHUB_SYNC_TOKEN_KEY);
-      return;
-    }
-    sessionStorage.setItem(GITHUB_SYNC_TOKEN_KEY, safeToken);
-  }
-
-  function toBase64Utf8(value) {
-    const bytes = new TextEncoder().encode(String(value || ""));
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-    }
-    return btoa(binary);
-  }
-
-  function buildGitHubContentApiUrl(settings) {
-    const owner = encodeURIComponent(settings.owner);
-    const repo = encodeURIComponent(settings.repo);
-    const path = settings.path
-      .split("/")
-      .filter(Boolean)
-      .map(part => encodeURIComponent(part))
-      .join("/");
-    return `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  }
-
-  async function readGitHubError(res) {
-    try {
-      const txt = await res.text();
-      if (!txt) return `HTTP ${res.status}`;
-      try {
-        const parsed = JSON.parse(txt);
-        if (parsed && parsed.message) return parsed.message;
-      } catch {}
-      return txt.slice(0, 220);
-    } catch {
-      return `HTTP ${res.status}`;
-    }
-  }
-
-  async function fetchRemoteFileSha(settings, token) {
-    const url = `${buildGitHubContentApiUrl(settings)}?ref=${encodeURIComponent(settings.branch)}`;
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "application/vnd.github+json",
-        "Authorization": `Bearer ${token}`,
-        "X-GitHub-Api-Version": "2022-11-28"
-      }
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) {
-      const details = await readGitHubError(res);
-      throw new Error(`Bestand ophalen mislukt (${res.status}): ${details}`);
-    }
-    const json = await res.json();
-    return json?.sha || null;
-  }
-
-  function isGitHubSyncReady(settings, token) {
-    return !!(settings?.owner && settings?.repo && settings?.branch && settings?.path && token);
-  }
-
-  async function publishDataToGitHub(data, reasonLabel = "update") {
-    const settings = GITHUB_SYNC;
-    const token = getGitHubSyncToken();
-    if (!isGitHubSyncReady(settings, token)) {
-      throw new Error("GitHub sync niet compleet: vul owner/repo/branch/pad/token in.");
-    }
-
-    const payload = JSON.stringify(data, null, 2);
-    let sha = await fetchRemoteFileSha(settings, token);
-    const requestBody = {
-      message: `chore: update ${settings.path} (${reasonLabel})`,
-      content: toBase64Utf8(payload),
-      branch: settings.branch
-    };
-    if (sha) requestBody.sha = sha;
-
-    const publish = async (body) => fetch(buildGitHubContentApiUrl(settings), {
-      method: "PUT",
-      headers: {
-        "Accept": "application/vnd.github+json",
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "X-GitHub-Api-Version": "2022-11-28"
-      },
-      body: JSON.stringify(body)
-    });
-
-    let res = await publish(requestBody);
-    if (res.status === 409) {
-      sha = await fetchRemoteFileSha(settings, token);
-      if (sha) requestBody.sha = sha;
-      res = await publish(requestBody);
-    }
-
-    if (!res.ok) {
-      const details = await readGitHubError(res);
-      throw new Error(`Publiceren mislukt (${res.status}): ${details}`);
-    }
-
-    return res.json();
-  }
-
-  let GITHUB_SYNC = loadGitHubSyncSettings();
-  let publishQueue = Promise.resolve();
-  let autoPublishTimer = null;
-  let warnedMissingSyncConfig = false;
-  let remoteSyncInFlight = false;
-
-  function setGitHubSyncStatus(message, level = "info") {
-    if (!ghSyncStatusEl) return;
-    ghSyncStatusEl.textContent = message;
-    ghSyncStatusEl.classList.remove("text-slate-500", "text-emerald-700", "text-rose-700");
-    if (level === "success") ghSyncStatusEl.classList.add("text-emerald-700");
-    else if (level === "error") ghSyncStatusEl.classList.add("text-rose-700");
-    else ghSyncStatusEl.classList.add("text-slate-500");
-  }
-
-  function enqueueGitHubPublish(data, reasonLabel, showSuccessToast = false) {
-    const snapshot = JSON.parse(JSON.stringify(data));
-    publishQueue = publishQueue.then(async () => {
-      const token = getGitHubSyncToken();
-      if (!isGitHubSyncReady(GITHUB_SYNC, token)) {
-        setGitHubSyncStatus("GitHub sync niet compleet ingesteld.", "error");
-        return;
-      }
-      setGitHubSyncStatus("Publiceren naar GitHub...", "info");
-      try {
-        await publishDataToGitHub(snapshot, reasonLabel);
-        const stamp = new Date().toLocaleTimeString();
-        setGitHubSyncStatus(`Gepubliceerd om ${stamp}.`, "success");
-        if (showSuccessToast) showToast("GitHub sync gelukt.");
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Onbekende fout tijdens publish.";
-        setGitHubSyncStatus(msg, "error");
-        showToast("GitHub sync mislukt.");
-        console.error(err);
-      }
-    });
-    return publishQueue;
-  }
-
-  function scheduleGitHubPublish(data) {
-    if (!GITHUB_SYNC.autoPublish) return;
-    const token = getGitHubSyncToken();
-    if (!isGitHubSyncReady(GITHUB_SYNC, token)) {
-      if (!warnedMissingSyncConfig) {
-        setGitHubSyncStatus("Auto-publish staat aan, maar instellingen of token ontbreken.", "error");
-        warnedMissingSyncConfig = true;
-      }
-      return;
-    }
-    warnedMissingSyncConfig = false;
-
-    clearTimeout(autoPublishTimer);
-    const snapshot = JSON.parse(JSON.stringify(data));
-    autoPublishTimer = setTimeout(() => {
-      enqueueGitHubPublish(snapshot, "automatische update");
-    }, 900);
-  }
-
-  function initGitHubSyncPanel() {
-    if (!ghOwnerInput || !ghRepoInput || !ghBranchInput || !ghPathInput || !ghAutoPublishInput) return;
-    ghOwnerInput.value = GITHUB_SYNC.owner;
-    ghRepoInput.value = GITHUB_SYNC.repo;
-    ghBranchInput.value = GITHUB_SYNC.branch;
-    ghPathInput.value = GITHUB_SYNC.path;
-    ghAutoPublishInput.checked = !!GITHUB_SYNC.autoPublish;
-
-    if (getGitHubSyncToken()) setGitHubSyncStatus("GitHub token geladen voor deze sessie.", "success");
-    else setGitHubSyncStatus("Voeg een GitHub token toe om te kunnen publiceren.", "info");
-  }
-
-  function ensureValidSelection() {
-    const cat = selected.catId ? findCategory(selected.catId) : null;
-    if (!cat) {
-      selected = { catId: null, subId: null, topicId: null };
-      return;
-    }
-
-    const sub = selected.subId ? findSub(selected.catId, selected.subId) : null;
-    if (!sub) {
-      selected = { catId: selected.catId, subId: null, topicId: null };
-      return;
-    }
-
-    if (selected.topicId && !findTopic(selected.catId, selected.subId, selected.topicId)) {
-      selected.topicId = null;
-    }
-  }
-
-  function isTypingInField() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = (el.tagName || "").toLowerCase();
-    return tag === "input" || tag === "textarea" || tag === "select";
-  }
-
-  async function syncAdminFromRepoIfNewer(notify = false) {
-    if (remoteSyncInFlight || isTypingInField()) return;
-    remoteSyncInFlight = true;
-    try {
-      const changed = await seedDataFromRepoIfNeeded();
-      if (!changed) return;
-      DATA = loadData();
-      ensureValidSelection();
-      renderTree();
-      await loadTopicIntoEditor();
-      await renderLibrary();
-      if (activeAdminTab === "feedback") renderFeedbackPanel();
-      setStatus(`Gesynchroniseerd - ${new Date().toLocaleTimeString()}`);
-      if (notify) showToast("Nieuwe content uit GitHub geladen.");
-    } finally {
-      remoteSyncInFlight = false;
-    }
-  }
-
   function saveData(data) {
     data.meta = data.meta || {};
     data.meta.updatedAt = nowIso();
@@ -1021,7 +684,6 @@
     if (bc) bc.postMessage({ type: "updated", at: data.meta.updatedAt });
     setStatus(`Opgeslagen - ${new Date().toLocaleTimeString()}`);
     showToast("Opgeslagen. Klantweergave is bijgewerkt.");
-    scheduleGitHubPublish(data);
   }
 
   // =====================================================
@@ -1072,15 +734,6 @@
   const jsonBox = document.getElementById("jsonBox");
   const exportJsonBtn = document.getElementById("exportJson");
   const importJsonBtn = document.getElementById("importJson");
-  const ghOwnerInput = document.getElementById("ghOwner");
-  const ghRepoInput = document.getElementById("ghRepo");
-  const ghBranchInput = document.getElementById("ghBranch");
-  const ghPathInput = document.getElementById("ghPath");
-  const ghTokenInput = document.getElementById("ghToken");
-  const ghAutoPublishInput = document.getElementById("ghAutoPublish");
-  const saveGhConfigBtn = document.getElementById("saveGhConfig");
-  const publishNowBtn = document.getElementById("publishNow");
-  const ghSyncStatusEl = document.getElementById("ghSyncStatus");
 
   const toastEl = document.getElementById("toast");
   const toastTextEl = document.getElementById("toastText");
@@ -2089,52 +1742,6 @@
       window.location.replace("./admin-login.html");
     });
   }
-  if (saveGhConfigBtn) {
-    saveGhConfigBtn.addEventListener("click", () => {
-      GITHUB_SYNC = normalizeGitHubSyncSettings({
-        owner: ghOwnerInput?.value,
-        repo: ghRepoInput?.value,
-        branch: ghBranchInput?.value,
-        path: ghPathInput?.value,
-        autoPublish: !!ghAutoPublishInput?.checked
-      });
-      saveGitHubSyncSettings(GITHUB_SYNC);
-
-      const tokenCandidate = String(ghTokenInput?.value || "").trim();
-      if (tokenCandidate) setGitHubSyncToken(tokenCandidate);
-      if (ghTokenInput) ghTokenInput.value = "";
-
-      warnedMissingSyncConfig = false;
-      const hasToken = !!getGitHubSyncToken();
-      if (isGitHubSyncReady(GITHUB_SYNC, hasToken ? getGitHubSyncToken() : "")) {
-        setGitHubSyncStatus("Sync instellingen opgeslagen en klaar voor publiceren.", "success");
-      } else if (hasToken) {
-        setGitHubSyncStatus("Instellingen opgeslagen. Controleer owner/repo/branch/pad.", "error");
-      } else {
-        setGitHubSyncStatus("Instellingen opgeslagen. Voeg nog een GitHub token toe.", "info");
-      }
-      showToast("Sync instellingen opgeslagen.");
-    });
-  }
-
-  if (publishNowBtn) {
-    publishNowBtn.addEventListener("click", async () => {
-      GITHUB_SYNC = normalizeGitHubSyncSettings({
-        owner: ghOwnerInput?.value,
-        repo: ghRepoInput?.value,
-        branch: ghBranchInput?.value,
-        path: ghPathInput?.value,
-        autoPublish: !!ghAutoPublishInput?.checked
-      });
-      saveGitHubSyncSettings(GITHUB_SYNC);
-
-      const tokenCandidate = String(ghTokenInput?.value || "").trim();
-      if (tokenCandidate) setGitHubSyncToken(tokenCandidate);
-      if (ghTokenInput) ghTokenInput.value = "";
-
-      await enqueueGitHubPublish(loadData(), "handmatige publicatie", true);
-    });
-  }
   refreshFeedbackBtn.addEventListener("click", () => {
     renderFeedbackPanel();
     showToast("Feedbackoverzicht vernieuwd.");
@@ -2149,13 +1756,6 @@
   window.addEventListener("storage", (e) => {
     if (e.key === ISSUE_FEEDBACK_KEY && activeAdminTab === "feedback") {
       renderFeedbackPanel();
-    }
-    if (e.key === STORAGE_KEY && e.newValue) {
-      DATA = loadData();
-      ensureValidSelection();
-      renderTree();
-      loadTopicIntoEditor();
-      renderLibrary();
     }
   });
 
@@ -2461,7 +2061,6 @@
   // Init
   // =====================================================
   async function initAdmin() {
-    initGitHubSyncPanel();
     await seedDataFromRepoIfNeeded();
     DATA = loadData();
     setAdminTab("content");
@@ -2472,14 +2071,6 @@
   }
 
   initAdmin();
-
-  setInterval(() => {
-    syncAdminFromRepoIfNewer(false);
-  }, 20000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) syncAdminFromRepoIfNewer(false);
-  });
 </script>
 </body>
 </html>

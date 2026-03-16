@@ -362,11 +362,11 @@
   }
 
   async function seedDataFromRepoIfNeeded() {
-    let localData = null;
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       try {
-        localData = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (hasCategories(parsed)) return false;
       } catch {}
     }
 
@@ -379,21 +379,8 @@
       if (!isValidDataShape(remoteData) || !hasCategories(remoteData)) return false;
 
       remoteData.meta = remoteData.meta || {};
-      const hasLocal = isValidDataShape(localData) && hasCategories(localData);
-      if (!hasLocal) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
-        return true;
-      }
-
-      const remoteAt = Date.parse(remoteData?.meta?.updatedAt || "");
-      const localAt = Date.parse(localData?.meta?.updatedAt || "");
-      const remoteIsNewer = Number.isFinite(remoteAt) && (!Number.isFinite(localAt) || remoteAt > localAt);
-      if (remoteIsNewer) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
-        return true;
-      }
-
-      return false;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteData));
+      return true;
     } catch {
       return false;
     }
@@ -1181,22 +1168,6 @@
     });
   }
 
-  let remoteSyncInFlight = false;
-  async function syncFromRepoIfNewer(notify = false) {
-    if (remoteSyncInFlight) return;
-    remoteSyncInFlight = true;
-    try {
-      const changed = await seedDataFromRepoIfNeeded();
-      if (!changed) return;
-      DATA = loadData();
-      lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
-      await render();
-      if (notify) showToast("Nieuwe content geladen.");
-    } finally {
-      remoteSyncInFlight = false;
-    }
-  }
-
   // Fallback voor kiosk-situaties waarin storage/broadcast events niet altijd doorkomen.
   setInterval(() => {
     const snap = localStorage.getItem(STORAGE_KEY) || "";
@@ -1205,14 +1176,6 @@
       render();
     }
   }, 2000);
-
-  setInterval(() => {
-    syncFromRepoIfNewer(false);
-  }, 20000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) syncFromRepoIfNewer(false);
-  });
 
   // Mobile sidebar controls
   function openSidebarMobile() {
