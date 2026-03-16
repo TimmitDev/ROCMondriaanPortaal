@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updatedAt": "2026-03-16T13:24:00.414Z"
+    "updatedAt": "2026-03-16T13:41:52.819Z"
   },
   "categories": [
     {
@@ -141,7 +141,7 @@
           "topics": [
             {
               "id": "printer-doet-het-niet",
-              "title": "Printer doet het niet",
+              "title": "Hoe kan ik printen?",
               "summary": "Printen met schoolaccount",
               "body": "",
               "steps": [
@@ -155,7 +155,8 @@
                 "source": "url",
                 "value": "./video/printer_laptop.mp4",
                 "caption": "Uitlegvideo voor printerproblemen op laptop."
-              }
+              },
+              "podcast": null
             }
           ]
         }
