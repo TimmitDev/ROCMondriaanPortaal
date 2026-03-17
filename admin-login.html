@@ -83,7 +83,7 @@
     (() => {
       const ADMIN_AUTH_KEY = "kb_admin_auth_v1";
       const ADMIN_AUTH_VALUE = "verified";
-      const ADMIN_PIN = "2493"; // Pas dit aan naar je eigen pincode.
+      const ADMIN_PIN_HASH = "13b3f39cb74686a176eb0f364ffe4e5e38c9bfa5bb9a8bd1624135ce306ef3d0"; // SHA-256 van de pincode.
 
       const form = document.getElementById("pinForm");
       const input = document.getElementById("pinInput");
@@ -105,10 +105,20 @@
         return;
       }
 
-      form.addEventListener("submit", (e) => {
+      async function sha256Hex(value) {
+        if (!window.crypto?.subtle) return "";
+        const bytes = new TextEncoder().encode(String(value || ""));
+        const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+        return [...new Uint8Array(digest)]
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const entered = (input.value || "").trim();
-        if (entered !== ADMIN_PIN) {
+        const enteredHash = await sha256Hex(entered);
+        if (!enteredHash || enteredHash !== ADMIN_PIN_HASH) {
           errorText.classList.remove("hidden");
           input.value = "";
           input.focus();
