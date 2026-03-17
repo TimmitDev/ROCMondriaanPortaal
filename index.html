@@ -90,11 +90,116 @@
     }
     #nav::-webkit-scrollbar { width: 8px; }
     #nav::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+
+    #idleScreensaver {
+      position: fixed;
+      inset: 0;
+      z-index: 10020;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .45s ease;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(15, 23, 42, 0.65), transparent 42%),
+        radial-gradient(circle at 80% 78%, rgba(30, 64, 175, 0.3), transparent 46%),
+        linear-gradient(155deg, #020617 0%, #0f172a 50%, #111827 100%);
+    }
+    #idleScreensaver.is-active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #idleScreensaver::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.17;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(148, 163, 184, 0.16) 0px,
+          rgba(148, 163, 184, 0.16) 1px,
+          transparent 1px,
+          transparent 26px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(148, 163, 184, 0.14) 0px,
+          rgba(148, 163, 184, 0.14) 1px,
+          transparent 1px,
+          transparent 26px
+        );
+      pointer-events: none;
+    }
+    #idleScreensaverLogo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: clamp(140px, 20vw, 250px);
+      aspect-ratio: 16 / 10;
+      padding: .42rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.36);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(226, 232, 240, 0.46));
+      box-shadow: 0 26px 52px -24px rgba(2, 6, 23, 0.95);
+      will-change: transform;
+      z-index: 1;
+    }
+    #idleScreensaverLogo img {
+      width: 100%;
+      height: 100%;
+      border-radius: .72rem;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+    }
+    #idleScreensaverLogo.is-bounce-flash {
+      animation: idleBounceFlash .24s ease-out;
+    }
+    #idleScreensaverMessage {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(18px, 3vh, 30px);
+      transform: translateX(-50%);
+      z-index: 2;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.38);
+      background: rgba(15, 23, 42, 0.46);
+      color: #e2e8f0;
+      padding: .56rem .98rem;
+      font-size: .86rem;
+      font-weight: 600;
+      letter-spacing: .01em;
+      backdrop-filter: blur(6px);
+      transition: color .2s ease, border-color .2s ease, background-color .2s ease;
+    }
+    #idleScreensaverMessage.is-corner-hit {
+      color: #fef9c3;
+      border-color: rgba(253, 224, 71, 0.74);
+      background: rgba(146, 64, 14, 0.36);
+    }
+    @keyframes idleBounceFlash {
+      0% { filter: brightness(1); }
+      50% { filter: brightness(1.32); }
+      100% { filter: brightness(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #idleScreensaver,
+      #idleScreensaverLogo {
+        transition: none !important;
+        animation: none !important;
+      }
+    }
   </style>
 </head>
 
 <body class="text-slate-900 antialiased">
-    <div id="topShield" class="fixed top-0 left-0 right-0 h-10 z-[9999] bg-transparent"></div>
+  <div id="topShield" class="fixed top-0 left-0 right-0 h-10 z-[9999] bg-transparent"></div>
+  <div id="idleScreensaver" aria-hidden="true">
+    <div id="idleScreensaverLogo">
+      <img src="./ROCM.jpeg" alt="ROC Mondriaan logo">
+    </div>
+    <div id="idleScreensaverMessage">Beweeg je muis om de site te openen</div>
+  </div>
   <div class="min-h-screen flex lg:gap-6 lg:px-4 lg:py-4">
 
     <!-- Mobile overlay -->
@@ -257,10 +362,25 @@
   const overlay = document.getElementById("overlay");
   const openSidebarBtn = document.getElementById("openSidebar");
   const closeSidebarBtn = document.getElementById("closeSidebar");
+  const idleScreensaverEl = document.getElementById("idleScreensaver");
+  const idleScreensaverLogoEl = document.getElementById("idleScreensaverLogo");
+  const idleScreensaverMessageEl = document.getElementById("idleScreensaverMessage");
+  const IDLE_TIMEOUT_MS = 90 * 1000;
+  const IDLE_BASE_SPEED = 2.45;
 
   const toastEl = document.getElementById("toast");
   const toastTextEl = document.getElementById("toastText");
   let toastTimer = null;
+  let idleTimer = null;
+  let idleScreenVisible = false;
+  let idleAnimFrame = null;
+  let idleAnimPrevTs = null;
+  let idlePosX = 0;
+  let idlePosY = 0;
+  let idleVelX = IDLE_BASE_SPEED;
+  let idleVelY = IDLE_BASE_SPEED;
+  let idleBouncerInitialized = false;
+  let idleCornerFlashTimer = null;
 
   function showToast(msg) {
     toastTextEl.textContent = msg;
@@ -1203,6 +1323,200 @@
     document.body.classList.remove("overflow-hidden");
   }
 
+  function randomizeIdleVelocity() {
+    const minComponent = 1.1;
+    let nextX = (Math.random() < 0.5 ? -1 : 1) * (IDLE_BASE_SPEED + Math.random() * 0.8);
+    let nextY = (Math.random() < 0.5 ? -1 : 1) * (IDLE_BASE_SPEED + Math.random() * 0.8);
+    if (Math.abs(nextX) < minComponent) nextX = Math.sign(nextX || 1) * minComponent;
+    if (Math.abs(nextY) < minComponent) nextY = Math.sign(nextY || 1) * minComponent;
+    idleVelX = nextX;
+    idleVelY = nextY;
+  }
+
+  function getIdleBounds() {
+    if (!idleScreensaverEl || !idleScreensaverLogoEl) return null;
+    const screen = idleScreensaverEl.getBoundingClientRect();
+    const logo = idleScreensaverLogoEl.getBoundingClientRect();
+    return {
+      maxX: Math.max(0, screen.width - logo.width),
+      maxY: Math.max(0, screen.height - logo.height)
+    };
+  }
+
+  function renderIdlePosition() {
+    if (!idleScreensaverLogoEl) return;
+    idleScreensaverLogoEl.style.transform = `translate3d(${idlePosX}px, ${idlePosY}px, 0)`;
+  }
+
+  function clampIdlePosition() {
+    const bounds = getIdleBounds();
+    if (!bounds) return;
+    idlePosX = Math.max(0, Math.min(bounds.maxX, idlePosX));
+    idlePosY = Math.max(0, Math.min(bounds.maxY, idlePosY));
+    renderIdlePosition();
+  }
+
+  function stopIdleAnimation() {
+    if (idleAnimFrame !== null) {
+      cancelAnimationFrame(idleAnimFrame);
+      idleAnimFrame = null;
+    }
+    idleAnimPrevTs = null;
+  }
+
+  function flashIdleBounce() {
+    if (!idleScreensaverLogoEl) return;
+    idleScreensaverLogoEl.classList.remove("is-bounce-flash");
+    void idleScreensaverLogoEl.offsetWidth;
+    idleScreensaverLogoEl.classList.add("is-bounce-flash");
+  }
+
+  function markIdleCornerHit() {
+    if (!idleScreensaverMessageEl) return;
+    idleScreensaverMessageEl.textContent = "Hoek geraakt!";
+    idleScreensaverMessageEl.classList.add("is-corner-hit");
+    clearTimeout(idleCornerFlashTimer);
+    idleCornerFlashTimer = setTimeout(() => {
+      if (!idleScreensaverMessageEl) return;
+      idleScreensaverMessageEl.classList.remove("is-corner-hit");
+      idleScreensaverMessageEl.textContent = "Beweeg je muis om de site te openen";
+    }, 1200);
+  }
+
+  function animateIdleBouncer(timestamp) {
+    if (!idleScreenVisible) {
+      stopIdleAnimation();
+      return;
+    }
+
+    if (idleAnimPrevTs === null) idleAnimPrevTs = timestamp;
+    const deltaMs = Math.min(42, timestamp - idleAnimPrevTs);
+    idleAnimPrevTs = timestamp;
+    const frameFactor = deltaMs / 16.6667;
+
+    const bounds = getIdleBounds();
+    if (!bounds) {
+      idleAnimFrame = requestAnimationFrame(animateIdleBouncer);
+      return;
+    }
+
+    let nextX = idlePosX + (idleVelX * frameFactor);
+    let nextY = idlePosY + (idleVelY * frameFactor);
+    let hitX = false;
+    let hitY = false;
+
+    if (nextX <= 0) {
+      nextX = 0;
+      idleVelX = Math.abs(idleVelX);
+      hitX = true;
+    } else if (nextX >= bounds.maxX) {
+      nextX = bounds.maxX;
+      idleVelX = -Math.abs(idleVelX);
+      hitX = true;
+    }
+
+    if (nextY <= 0) {
+      nextY = 0;
+      idleVelY = Math.abs(idleVelY);
+      hitY = true;
+    } else if (nextY >= bounds.maxY) {
+      nextY = bounds.maxY;
+      idleVelY = -Math.abs(idleVelY);
+      hitY = true;
+    }
+
+    idlePosX = nextX;
+    idlePosY = nextY;
+    renderIdlePosition();
+
+    if (hitX || hitY) flashIdleBounce();
+    if (hitX && hitY) markIdleCornerHit();
+
+    idleAnimFrame = requestAnimationFrame(animateIdleBouncer);
+  }
+
+  function startIdleAnimation() {
+    if (!idleScreensaverEl || !idleScreensaverLogoEl) return;
+    if (!idleBouncerInitialized) {
+      const bounds = getIdleBounds();
+      if (bounds) {
+        idlePosX = bounds.maxX / 2;
+        idlePosY = bounds.maxY / 2;
+      }
+      randomizeIdleVelocity();
+      idleBouncerInitialized = true;
+    }
+    clampIdlePosition();
+    stopIdleAnimation();
+    idleAnimFrame = requestAnimationFrame(animateIdleBouncer);
+  }
+
+  function showIdleScreensaver() {
+    if (!idleScreensaverEl || idleScreenVisible) return;
+    closeSidebarMobile();
+    idleScreenVisible = true;
+    idleScreensaverEl.classList.add("is-active");
+    idleScreensaverEl.setAttribute("aria-hidden", "false");
+    if (idleScreensaverMessageEl) {
+      idleScreensaverMessageEl.textContent = "Beweeg je muis om de site te openen";
+      idleScreensaverMessageEl.classList.remove("is-corner-hit");
+    }
+    startIdleAnimation();
+  }
+
+  function hideIdleScreensaver() {
+    if (!idleScreensaverEl || !idleScreenVisible) return;
+    idleScreenVisible = false;
+    idleScreensaverEl.classList.remove("is-active");
+    idleScreensaverEl.setAttribute("aria-hidden", "true");
+    clearTimeout(idleCornerFlashTimer);
+    stopIdleAnimation();
+  }
+
+  function resetIdleScreensaverTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+    if (!idleScreensaverEl || document.hidden) return;
+    idleTimer = setTimeout(() => {
+      if (document.hidden) return;
+      showIdleScreensaver();
+    }, IDLE_TIMEOUT_MS);
+  }
+
+  function handleIdleActivity() {
+    if (idleScreenVisible) hideIdleScreensaver();
+    resetIdleScreensaverTimer();
+  }
+
+  function setupIdleScreensaver() {
+    if (!idleScreensaverEl || !idleScreensaverLogoEl) return;
+
+    const passiveEvents = ["pointermove", "pointerdown", "touchstart", "wheel", "scroll"];
+    passiveEvents.forEach((eventName) => {
+      const target = eventName === "scroll" ? window : document;
+      target.addEventListener(eventName, handleIdleActivity, { passive: true });
+    });
+    document.addEventListener("keydown", handleIdleActivity);
+
+    idleScreensaverEl.addEventListener("click", handleIdleActivity);
+    idleScreensaverEl.addEventListener("touchstart", handleIdleActivity, { passive: true });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        hideIdleScreensaver();
+        clearTimeout(idleTimer);
+        idleTimer = null;
+        return;
+      }
+      resetIdleScreensaverTimer();
+    });
+
+    window.addEventListener("resize", clampIdlePosition, { passive: true });
+    randomizeIdleVelocity();
+    clampIdlePosition();
+    resetIdleScreensaverTimer();
+  }
+
   openSidebarBtn.addEventListener("click", openSidebarMobile);
   closeSidebarBtn.addEventListener("click", closeSidebarMobile);
   overlay.addEventListener("click", closeSidebarMobile);
@@ -1229,6 +1543,7 @@
     DATA = loadData();
     lastDataSnapshot = localStorage.getItem(STORAGE_KEY) || "";
     await render();
+    setupIdleScreensaver();
   }
 
   initApp();
