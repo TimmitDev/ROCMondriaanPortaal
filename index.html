@@ -162,13 +162,15 @@
       transform: translateX(-50%);
       z-index: 2;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.38);
-      background: rgba(15, 23, 42, 0.46);
-      color: #e2e8f0;
-      padding: .56rem .98rem;
-      font-size: .86rem;
-      font-weight: 600;
-      letter-spacing: .01em;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.58);
+      color: #f8fafc;
+      padding: .72rem 1.2rem;
+      font-size: clamp(1rem, 1.8vw, 1.35rem);
+      font-weight: 800;
+      letter-spacing: .02em;
+      text-align: center;
+      text-shadow: 0 2px 8px rgba(2, 6, 23, 0.65);
       backdrop-filter: blur(6px);
       transition: color .2s ease, border-color .2s ease, background-color .2s ease;
     }
@@ -198,7 +200,7 @@
     <div id="idleScreensaverLogo">
       <img src="./ROCM.jpeg" alt="ROC Mondriaan logo">
     </div>
-    <div id="idleScreensaverMessage">Beweeg je muis om de site te openen</div>
+    <div id="idleScreensaverMessage">Beweeg de muis om de site te openen</div>
   </div>
   <div class="min-h-screen flex lg:gap-6 lg:px-4 lg:py-4">
 
@@ -1379,7 +1381,7 @@
     idleCornerFlashTimer = setTimeout(() => {
       if (!idleScreensaverMessageEl) return;
       idleScreensaverMessageEl.classList.remove("is-corner-hit");
-      idleScreensaverMessageEl.textContent = "Beweeg je muis om de site te openen";
+      idleScreensaverMessageEl.textContent = "Beweeg de muis om de site te openen";
     }, 1200);
   }
 
@@ -1458,7 +1460,7 @@
     idleScreensaverEl.classList.add("is-active");
     idleScreensaverEl.setAttribute("aria-hidden", "false");
     if (idleScreensaverMessageEl) {
-      idleScreensaverMessageEl.textContent = "Beweeg je muis om de site te openen";
+      idleScreensaverMessageEl.textContent = "Beweeg de muis om de site te openen";
       idleScreensaverMessageEl.classList.remove("is-corner-hit");
     }
     startIdleAnimation();
