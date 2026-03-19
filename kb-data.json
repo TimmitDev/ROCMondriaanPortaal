@@ -1,6 +1,6 @@
 {
   "meta": {
-    "updatedAt": "2026-03-16T13:41:52.819Z"
+    "updatedAt": "2026-03-19T07:39:54.851Z"
   },
   "categories": [
     {
@@ -74,13 +74,21 @@
               "media": null
             },
             {
-              "id": "android-wifi-verbinding",
-              "title": "Android - Wifi verbinding",
+              "id": "samsung-wifi-verbinding",
+              "title": "Samsung- Wifi verbinding",
               "summary": "",
-              "body": "",
-              "steps": [],
+              "body": "Na de eerste keer maakt je telefoon meestal automatisch verbinding met eduroam wanneer je op school bent.",
+              "steps": [
+                "Open Instellingen op je Samsung-telefoon.",
+                "Ga naar Wi-Fi.",
+                "Zoek in de lijst met beschikbare netwerken naar eduroam.",
+                "Tik op eduroam.",
+                "Vul je studentaccount en wachtwoord in.",
+                "Tik op Verbinden."
+              ],
               "tip": "",
-              "media": null
+              "media": null,
+              "podcast": null
             }
           ]
         }
